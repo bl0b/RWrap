@@ -25,7 +25,7 @@ struct _gen_<void, void, void, void, void, void, void> {
 
 template <typename RET>
 struct _gen_<RET, void, void, void, void, void, void> {
-    template<void (*F)()>
+    template<RET (*F)()>
     struct _w {
         static SEXP _() {
             return Value<RET>::coerceToR(F());
@@ -58,7 +58,7 @@ template <typename A1, typename A2>
 struct _gen_<void, A1, A2, void, void, void, void> {
     template<void (*F)(A1, A2)>
     struct _w {
-        static SEXP _(A1 a, A2 b) {
+        static SEXP _(SEXP a, SEXP b) {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b));
             return NULL;
         }
@@ -69,7 +69,7 @@ template <typename RET, typename A1, typename A2>
 struct _gen_<RET, A1, A2, void, void, void, void> {
     template<RET (*F)(A1, A2)>
     struct _w {
-        static SEXP _(A1 a) {
+        static SEXP _(SEXP a, SEXP b) {
             return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
                                            Value<A2>::coerceToC(b)));
         }
@@ -89,8 +89,8 @@ struct _gen_<RET, A1, A2, A3, void, void, void> {
 };
 
 template <typename A1, typename A2, typename A3>
-struct _gen_<A1, A2, A3, void, void, void> {
-    template<RET (*F)(A1, A2, A3)>
+struct _gen_<void, A1, A2, A3, void, void, void> {
+    template<void (*F)(A1, A2, A3)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c) {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
@@ -114,8 +114,8 @@ struct _gen_<RET, A1, A2, A3, A4, void, void> {
 };
 
 template <typename A1, typename A2, typename A3, typename A4, typename A5>
-struct _gen_<A1, A2, A3, A4, A5, void> {
-    template<RET (*F)(A1, A2, A3, A4, A5)>
+struct _gen_<void, A1, A2, A3, A4, A5, void> {
+    template<void (*F)(A1, A2, A3, A4, A5)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e) {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
@@ -141,39 +141,10 @@ struct _gen_<RET, A1, A2, A3, A4, A5, void> {
     };
 };
 
-template <typename A1, typename A2, typename A3, typename A4, typename A5>
-struct _gen_<A1, A2, A3, A4, A5, void> {
-    template<RET (*F)(A1, A2, A3, A4, A5)>
-    struct _w {
-        static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e));
-            return NULL;
-        }
-    };
-};
-
-template <typename RET, typename A1, typename A2, typename A3, typename A4,
-          typename A5, typename A6>
-struct _gen_<RET, A1, A2, A3, A4, A5, A6> {
-    template<RET (*F)(A1, A2, A3, A4, A5, A6)>
-    struct _w {
-        static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A3>::coerceToC(d),
-                                           Value<A3>::coerceToC(e),
-                                           Value<A4>::coerceToC(f)));
-        }
-    };
-};
-
 template <typename A1, typename A2, typename A3, typename A4, typename A5,
           typename A6>
-struct _gen_<A1, A2, A3, A4, A5, A6> {
-    template<RET (*F)(A1, A2, A3, A4, A5, A6)>
+struct _gen_<void, A1, A2, A3, A4, A5, A6> {
+    template<void (*F)(A1, A2, A3, A4, A5, A6)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f) {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),

@@ -1,5 +1,5 @@
-#ifndef _RWRAP_GEN_WRAP_H_
-#define _RWRAP_GEN_WRAP_H_
+#ifndef _RWRAP_FUNCTRAITS_H_
+#define _RWRAP_FUNCTRAITS_H_
 
 #include <R.h>
 #include <Rinternals.h>
