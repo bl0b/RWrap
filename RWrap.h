@@ -9,6 +9,9 @@
 #include <fstream>
 #include <vector>
 
+#include <boost/type_traits.hpp>
+#include <boost/typeof/std/utility.hpp>
+
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
@@ -110,11 +113,14 @@ public:
 
     void generate_namespace() const {
         std::ofstream ns("NAMESPACE");
-        ns << "useDynLib(" << name << ", .registration=TRUE)" << std::endl;
-        /*std::vector<R_CallMethodDef>::const_iterator i, j = routines_.end();*/
-        /*for (i = routines_.begin(); i != j; i++) {*/
+        ns << "useDynLib(" << name;
+        //<< ", .registration=TRUE)" << std::endl;
+        ns << ")" << std::endl;
+        std::vector<R_CallMethodDef>::const_iterator i, j = routines_.end();
+        for (i = routines_.begin(); i != j; i++) {
             /*ns << ", " << i->name;*/
-        /*}*/
+            ns << "export('" << i->name << "')" << std::endl;
+        }
         /*ns << ")" << std::endl;*/
     }
 

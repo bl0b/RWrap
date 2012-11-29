@@ -1,9 +1,41 @@
+
+#####################################
+# Configure this
+PREFIX=/usr
+CXXFLAGS=-ggdb
+#
+#####################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 INCLUDES=FuncTraits.h gen_wrap.h RWrap.h Value.h
+INCINST=$(PREFIX)/include/RWrap
+BININST=$(PREFIX)/bin
 
-INST=/usr/include/RWrap
+RCFLAGS=$(shell R CMD config --cppflags)
+RLDFLAGS=$(shell R CMD config --ldflags)
+CXX=$(shell R CMD config CXX)
 
-all:
 
-install: $(INCLUDES)
-	mkdir -p $(INST)
-	cp -a $(INCLUDES) $(INST)
+all: Rwrap
+
+Rwrap: Rwrap.cc
+	$(CXX) $(RCFLAGS) $(RLDFLAGS) $(CXXFLAGS) $< -o $@
+
+
+install: $(INCLUDES) Rwrap
+	mkdir -p $(INCINST)
+	mkdir -p $(BININST)
+	cp -va Rwrap $(BININST)
+	cp -va $(INCLUDES) $(INCINST)

@@ -1,4 +1,4 @@
-Package: test_shlib
+Package: testshlib
 Version: 1.0
 Date: 2012-11-29
 Title: Simple test for RWrap
