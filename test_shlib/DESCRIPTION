@@ -1,0 +1,10 @@
+Package: test_shlib
+Version: 1.0
+Date: 2012-11-29
+Title: Simple test for RWrap
+Authors@R: c(person("Damien", "Leroux", role = c("aut", "cre"), email = "damien.leroux@toulouse.inra.fr"))
+Maintainer: Damien Leroux <damien.leroux@toulouse.inra.fr>
+Depends: R (>= 2.14)
+Description: Does nothing but prove that RWrap works.
+License: GPL (>= 2)
+URL: http://www.r-project.org

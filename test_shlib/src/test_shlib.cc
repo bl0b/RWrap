@@ -4,21 +4,15 @@
 
 /*#include "test.h"*/
 
-using namespace Rwrap;
-
-
 double mul(double x, double y) {
     return x*y;
 }
 
 
+MODULE(test_shlib)
+    .reg(mul).auto_glue()
+    ;
 
 
-extern "C" {
 
-void R_init_test_shlib(DllInfo* info) {
-    Module m;
-    m.reg(mul)
-     .commit(info);
-}
-}
+
