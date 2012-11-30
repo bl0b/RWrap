@@ -18,7 +18,7 @@ struct _gen_<void, void, void, void, void, void, void> {
     struct _w {
         static SEXP _() {
             F();
-            return NULL;
+            return R_NilValue;
         }
     };
 };
@@ -37,9 +37,9 @@ template <typename A1>
 struct _gen_<void, A1, void, void, void, void, void> {
     template<void (*F)(A1)>
     struct _w {
-        static SEXP _(A1 a) {
+        static SEXP _(SEXP a) {
             F(Value<A1>::coerceToC(a));
-            return NULL;
+            return R_NilValue;
         }
     };
 };
@@ -48,7 +48,7 @@ template <typename RET, typename A1>
 struct _gen_<RET, A1, void, void, void, void, void> {
     template<RET (*F)(A1)>
     struct _w {
-        static SEXP _(A1 a) {
+        static SEXP _(SEXP a) {
             return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a)));
         }
     };
@@ -60,7 +60,7 @@ struct _gen_<void, A1, A2, void, void, void, void> {
     struct _w {
         static SEXP _(SEXP a, SEXP b) {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b));
-            return NULL;
+            return R_NilValue;
         }
     };
 };
@@ -95,7 +95,7 @@ struct _gen_<void, A1, A2, A3, void, void, void> {
         static SEXP _(SEXP a, SEXP b, SEXP c) {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
               Value<A3>::coerceToC(c));
-            return NULL;
+            return R_NilValue;
         }
     };
 };
@@ -121,7 +121,7 @@ struct _gen_<void, A1, A2, A3, A4, A5, void> {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
               Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
               Value<A5>::coerceToC(e));
-            return NULL;
+            return R_NilValue;
         }
     };
 };
@@ -150,7 +150,7 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6> {
             F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
               Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
               Value<A5>::coerceToC(e), Value<A6>::coerceToC(f));
-            return NULL;
+            return R_NilValue;
         }
     };
 };
