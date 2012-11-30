@@ -25,6 +25,18 @@ struct Value<SEXP> {
 };
 
 template <>
+struct Value<bool> {
+    typedef bool CType;
+    static CType coerceToC(SEXP v) {
+        return asLogical(v);
+    }
+    static SEXP coerceToR(CType v) {
+        return ScalarLogical(v);
+    }
+};
+
+
+template <>
 struct Value<int> {
     typedef int CType;
     static CType coerceToC(SEXP v) {
