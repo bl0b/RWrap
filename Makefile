@@ -31,7 +31,7 @@ CXX=$(shell R CMD config CXX)
 all: Rwrap
 
 Rwrap: Rwrap.cc $(INCLUDES)
-	$(CXX) $(RCFLAGS) $(RLDFLAGS) $(CXXFLAGS) $< -o $@
+	$(CXX) $(RCFLAGS) $(CXXFLAGS) $< -ldl $(RLDFLAGS) -o $@
 
 
 install: $(INCLUDES) Rwrap
