@@ -163,7 +163,7 @@ struct PODVecTraits {
         rc[i] = cc[i];
     }
     static void Cset(CVecType& cc, RContainerType rc, int i) {
-        cc[i] = rc[i];
+        cc.push_back(rc[i]);
     }
 };
 
@@ -227,6 +227,7 @@ struct Value<std::vector<T> > {
 
     static CType coerceToC(SEXP v) {
         CType ret;
+        std::cout << "R.length = " << (length(v)) << std::endl;
         ret.reserve(length(v));
         typename vtraits::RContainerType buf = vtraits::initRC(v);
         for(int i = 0; i < length(v); ++i) {

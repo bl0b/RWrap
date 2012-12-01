@@ -16,9 +16,19 @@ std::vector<int> hazcheez() {
     return ret;
 }
 
+std::vector<int> sqr(std::vector<int> vec) {
+    for (int i = 0; i < vec.size(); ++i) {
+        std::cout << vec[i] << ' ';
+        vec[i] *= vec[i];
+        std::cout << vec[i] << std::endl;
+    }
+    return vec;
+}
+
 MODULE(testshlib)
     .reg(mul).arg("x").arg("y", "50").auto_glue()
     .reg(isTrue).arg("plop").auto_glue()
     .reg(hazcheez).auto_glue()
+    .reg(sqr).arg("vec").auto_glue()
     ;
 
