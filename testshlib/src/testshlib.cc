@@ -25,10 +25,25 @@ std::vector<int> sqr(std::vector<int> vec) {
     return vec;
 }
 
+Rwrap::List mydf() {
+    Rwrap::List ret;
+    std::vector<int> a, b;
+    a.push_back(1);
+    a.push_back(3);
+    a.push_back(5);
+    b.push_back(10);
+    b.push_back(20);
+    b.push_back(30);
+    ret.add("a", a);
+    ret.add("b", b);
+    return ret;
+}
+
 MODULE(testshlib)
     .reg(mul).arg("x").arg("y", "50").auto_glue()
     .reg(isTrue).arg("plop").auto_glue()
     .reg(hazcheez).auto_glue()
+    .reg(mydf).wrap_result("as.data.frame(", ")").auto_glue()
     .reg(sqr).arg("vec").auto_glue()
     ;
 

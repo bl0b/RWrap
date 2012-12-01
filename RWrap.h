@@ -111,6 +111,7 @@ public:
     Module& wrap_result(const char* pfx, const char* sfx) {
         wrap_result_prefix = pfx;
         wrap_result_suffix = sfx;
+        return *this;
     }
 
     void _glue_args(int argc, bool decl) {
