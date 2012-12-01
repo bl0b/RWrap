@@ -107,6 +107,9 @@ public:
         if (argc == 0) {
             return;
         }
+        if (!decl) {
+            glue << ',';
+        }
         if (args.size() == argc) {
             for (int i = 0; i < args.size(); ++i) {
                 glue << args[i].name;
@@ -119,7 +122,7 @@ public:
             }
         } else {
             glue << 'a';
-            for (int i = 1; i < argc; ++i) {
+            for (int i = 0; i < argc; ++i) {
                 glue << ',' << (char)('a' + i);
             }
         }
