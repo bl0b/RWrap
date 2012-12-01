@@ -119,7 +119,6 @@ class List {
             PROTECT(ret = allocVector(VECSXP, n));
             PROTECT(names = allocVector(VECSXP, n));
             for(int i = 0; i < n; i++) {
-                std::cout << i << ": " << names_[i] << " " << elements_[i] << std::endl;
                 SET_VECTOR_ELT(names, i, Value<const char*>::coerceToR(names_[i]));
                 SET_VECTOR_ELT(ret, i, elements_[i]);
             }
@@ -227,7 +226,6 @@ struct Value<std::vector<T> > {
 
     static CType coerceToC(SEXP v) {
         CType ret;
-        std::cout << "R.length = " << (length(v)) << std::endl;
         ret.reserve(length(v));
         typename vtraits::RContainerType buf = vtraits::initRC(v);
         for(int i = 0; i < length(v); ++i) {
