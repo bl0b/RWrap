@@ -103,34 +103,36 @@ public:
         return *this;
     }
 
+    void _glue_args(int argc, bool decl) {
+        if (argc == 0) {
+            return;
+        }
+        if (args.size() == argc) {
+            for (int i = 0; i < args.size(); ++i) {
+                glue << args[i].name;
+                if (decl && args[i].default_value) {
+                    glue << '=' << args[i].default_value;
+                }
+                if ((i + 1) < argc) {
+                    glue << ',';
+                }
+            }
+        } else {
+            glue << 'a';
+            for (int i = 1; i < argc; ++i) {
+                glue << ',' << (char)('a' + i);
+            }
+        }
+    }
+
     Module& auto_glue() {
         const char* fname = routines_.back().name;
         int argc = routines_.back().numArgs;
         /*std::ostringstream buf;*/
         glue << fname << " <- function(";
-        if (argc > 0) {
-            if (args.size() == argc) {
-                for (int i = 0; i < args.size(); ++i) {
-                    glue << args[i].name;
-                    if (args[i].default_value) {
-                        glue << '=' << args[i].default_value;
-                    }
-                    if ((i + 1) < argc) {
-                        glue << ',';
-                    }
-                }
-            } else {
-                glue << 'a';
-                for (int i = 1; i < argc; ++i) {
-                    glue << ',' << (char)('a' + i);
-                }
-            }
-        }
+        _glue_args(argc, true);
         glue << ") .Call('" << fname << '\'';
-        for (int i = 0; i < argc; ++i) {
-            glue << ',';
-            glue << (char)('a' + i);
-        }
+        _glue_args(argc, false);
         glue <<  ", PACKAGE='" << name << "')" << std::endl;
         glue.flush();
         return *this;
