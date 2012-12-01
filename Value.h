@@ -130,7 +130,7 @@ class List {
 template <>
 struct Value<List> {
     typedef List CType;
-    static SEXP coerceToR(CType& v) {
+    static SEXP coerceToR(CType v) {
         return v.toR();
     }
 };
