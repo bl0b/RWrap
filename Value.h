@@ -1,6 +1,9 @@
 #ifndef _RWRAP_VALUE_H_
 #define _RWRAP_VALUE_H_
 
+#include <vector>
+#include <string>
+
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
@@ -13,9 +16,9 @@ namespace Rwrap {
 /*character STRSXP */
 /*list  	VECSXP*/
 
+
 template <typename T> struct Value {};
 template <> struct Value<void> {};
-
 
 template <>
 struct Value<SEXP> {
@@ -135,6 +138,103 @@ struct Value<List> {
     }
 };
 
+
+template <typename T>
+struct RVecTraits {
+    enum { type=VECSXP };
+    typedef SEXP RContainerType;
+    typedef T value_type;
+    static RContainerType initRC(SEXP value) {
+        return value;
+    }
+    static void Rset(RContainerType rc, std::vector<T>& cc, int i) {
+        SET_VECTOR_ELT(rc, i, Value<T>::coerceToR(cc[i]));
+    }
+    static void Cset(std::vector<T>& cc, RContainerType rc, int i) {
+        cc.push_back(Value<T>::coerceToC(Value<T>::coerceToC(VECTOR_ELT(rc, i))));
+    }
+};
+
+template <typename T>
+struct PODVecTraits {
+    typedef T* RContainerType;
+    typedef std::vector<T> CVecType;
+    static void Rset(RContainerType rc, CVecType& cc, int i) {
+        rc[i] = cc[i];
+    }
+    static void Cset(CVecType& cc, RContainerType rc, int i) {
+        cc[i] = rc[i];
+    }
+};
+
+template <> struct RVecTraits<double> : public PODVecTraits<double> {
+    enum { type=REALSXP };
+    typedef double value_type;
+    typedef double* RContainerType;
+    static RContainerType initRC(SEXP value) {
+        return REAL(value);
+    }
+    using PODVecTraits<double>::Rset;
+    using PODVecTraits<double>::Cset;
+};
+
+template <> struct RVecTraits<int> : public PODVecTraits<int> {
+    enum { type=INTSXP };
+    typedef int value_type;
+    typedef int* RContainerType;
+    static RContainerType initRC(SEXP value) {
+        return INTEGER(value);
+    }
+    using PODVecTraits<int>::Rset;
+    using PODVecTraits<int>::Cset;
+};
+
+template <> struct RVecTraits<bool> : public PODVecTraits<int> {
+    enum { type=LGLSXP };
+    typedef int value_type;
+    typedef int* RContainerType;
+    static RContainerType initRC(SEXP value) {
+        return LOGICAL(value);
+    }
+    using PODVecTraits<int>::Rset;
+    using PODVecTraits<int>::Cset;
+};
+
+template <> struct RVecTraits<float> {
+    enum { type=SINGLESXP };
+    /* should be avoided and coerced into double somewhere else */
+};
+
+template <> struct RVecTraits<std::string> { enum { type=STRSXP }; };
+template <> struct RVecTraits<char*> { enum { type=STRSXP }; };
+template <> struct RVecTraits<const char*> { enum { type=STRSXP }; };
+
+template <typename T>
+struct Value<std::vector<T> > {
+    typedef std::vector<T> CType;
+    typedef RVecTraits<T> vtraits;
+
+    static SEXP coerceToR(CType v) {
+        SEXP ret;
+        PROTECT(ret = allocVector(vtraits::type, v.size()));
+        typename vtraits::RContainerType buf = vtraits::initRC(ret);
+        for(int i = 0; i < v.size(); ++i) {
+            vtraits::Rset(buf, v, i);
+        }
+        UNPROTECT(1);
+        return ret;
+    }
+
+    static CType coerceToC(SEXP v) {
+        CType ret;
+        ret.reserve(length(v));
+        typename vtraits::RContainerType buf = vtraits::initRC(v);
+        for(int i = 0; i < length(v); ++i) {
+            vtraits::Cset(ret, buf, i);
+        }
+        return ret;
+    }
+};
 
 }
 
