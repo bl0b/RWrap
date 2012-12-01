@@ -55,6 +55,7 @@ class Module {
     std::vector<R_CallMethodDef> routines_;
     std::ostringstream glue;
     std::vector<Argument> args;
+    std::string wrap_result_prefix, wrap_result_suffix;
 
 public:
     Module(const char* name_)
@@ -62,6 +63,8 @@ public:
         , routines_()
         , glue()
         , args()
+        , wrap_result_prefix()
+        , wrap_result_suffix()
     {}
 
     Module(const Module& m)
@@ -78,6 +81,8 @@ public:
         /*printf("   - wrap: %p\n", wrapper);*/
         routines_.push_back(*(R_CallMethodDef[]){{name, wrapper, argc}});
         args.clear();
+        wrap_result_prefix.clear();
+        wrap_result_suffix.clear();
         return *this;
     }
 
@@ -101,6 +106,11 @@ public:
     Module& arg(const char* n, const char* v=NULL) {
         args.push_back(Argument(n, v));
         return *this;
+    }
+
+    Module& wrap_result(const char* pfx, const char* sfx) {
+        wrap_result_prefix = pfx;
+        wrap_result_suffix = sfx;
     }
 
     void _glue_args(int argc, bool decl) {
@@ -134,9 +144,11 @@ public:
         /*std::ostringstream buf;*/
         glue << fname << " <- function(";
         _glue_args(argc, true);
-        glue << ") .Call('" << fname << '\'';
+        glue << ") " << wrap_result_prefix
+             << ".Call('" << fname << '\'';
         _glue_args(argc, false);
-        glue <<  ", PACKAGE='" << name << "')" << std::endl;
+        glue <<  ", PACKAGE='" << name << "')"
+             << wrap_result_suffix << std::endl;
         glue.flush();
         return *this;
     }
