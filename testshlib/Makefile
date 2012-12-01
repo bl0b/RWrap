@@ -12,4 +12,4 @@ src/testshlib.so: src/testshlib.cc
 	R CMD SHLIB src/testshlib.cc
 
 clean:
-	rm testshlib_1.0.tar.gz src/testshlib.o src/testshlib.so
+	rm -f testshlib_1.0.tar.gz src/testshlib.o src/testshlib.so

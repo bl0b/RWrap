@@ -34,6 +34,10 @@ Rwrap: Rwrap.cc $(INCLUDES)
 	$(CXX) $(RCFLAGS) $(CXXFLAGS) $< -ldl $(RLDFLAGS) -o $@
 
 
+test: test_rwrap.cc $(INCLUDES)
+	$(CXX) $(RCFLAGS) $(CXXFLAGS) $< -ldl $(RLDFLAGS) -o $@
+
+
 install: $(INCLUDES) Rwrap
 	mkdir -p $(INCINST)
 	mkdir -p $(BININST)

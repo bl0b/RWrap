@@ -40,22 +40,35 @@ struct reg_helper {
 };
 
 
+struct Argument {
+    const char* name;
+    const char* default_value;
+    Argument(const char* n, const char* def=NULL)
+        : name(n)
+        , default_value(def)
+    {}
+};
+
+
 class Module {
     const char* name;
     std::vector<R_CallMethodDef> routines_;
     std::ostringstream glue;
+    std::vector<Argument> args;
 
 public:
     Module(const char* name_)
         : name(name_)
         , routines_()
         , glue()
+        , args()
     {}
 
     Module(const Module& m)
         : name(m.name)
         , routines_(m.routines_)
-          , glue(m.glue.str())
+        , glue(m.glue.str())
+        , args(m.args)
     {}
 
     Module& _reg(const char* name, int argc, DL_FUNC wrapper) {
@@ -64,6 +77,7 @@ public:
         /*printf("   - argc: %i\n", argc);*/
         /*printf("   - wrap: %p\n", wrapper);*/
         routines_.push_back(*(R_CallMethodDef[]){{name, wrapper, argc}});
+        args.clear();
         return *this;
     }
 
@@ -84,15 +98,32 @@ public:
         UNPROTECT(2);
     }
 
+    Module& arg(const char* n, const char* v=NULL) {
+        args.push_back(Argument(n, v));
+        return *this;
+    }
+
     Module& auto_glue() {
         const char* fname = routines_.back().name;
         int argc = routines_.back().numArgs;
         /*std::ostringstream buf;*/
         glue << fname << " <- function(";
-        if(argc > 0) {
-            glue << 'a';
-            for (int i = 1; i < argc; ++i) {
-                glue << ',' << (char)('a' + i);
+        if (argc > 0) {
+            if (args.size() == argc) {
+                for (int i = 0; i < args.size(); ++i) {
+                    glue << args[i].name;
+                    if (args[i].default_value) {
+                        glue << '=' << args[i].default_value;
+                    }
+                    if ((i + 1) < argc) {
+                        glue << ',';
+                    }
+                }
+            } else {
+                glue << 'a';
+                for (int i = 1; i < argc; ++i) {
+                    glue << ',' << (char)('a' + i);
+                }
             }
         }
         glue << ") .Call('" << fname << '\'';

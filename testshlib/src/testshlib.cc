@@ -17,8 +17,8 @@ std::vector<int> hazcheez() {
 }
 
 MODULE(testshlib)
-    .reg(mul).auto_glue()
-    .reg(isTrue).auto_glue()
+    .reg(mul).arg("x").arg("y", "50").auto_glue()
+    .reg(isTrue).arg("plop").auto_glue()
     .reg(hazcheez).auto_glue()
     ;
 
