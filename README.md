@@ -4,17 +4,17 @@ Pretty much like Rcpp, but the other way around. Wrap your existing C++ code for
 
 RWrap allows you to quickly publish C++ routines for use in R without any refactoring (provided you wrote them well, of course), and also takes care of generating the corresponding NAMESPACE and glue R script files for you.
 
-1. [Steps to create an R package](#steps-to-create-an-r-package-using-rwrap-in-step-6)
+1. [Steps to create an R package](#steps-to-create-an-r-package-using-rwrap-in-steps-6-and-8)
 2. [Applying the RWrap magic](#rwrap-magic)
   1. [RWrap basics](#basics)
   2. [RWrap goodies](#goodies)
-    1. [Named arguments](#named-arguments)
-    2. [Pre- and Post- processing in glue code](#pre--and-post--processing-of-results-in-glue-code)
+      1. [Named arguments](#named-arguments)
+      2. [Pre- and Post- processing in glue code](#pre--and-post--processing-of-results-in-glue-code)
   3. [Wrapped types](#wrapped-types)
   4. [Extending RWrap](#extending-rwrap)
 
 
-## Steps to create an R package (using RWrap, in step 6.): ##
+## Steps to create an R package (using RWrap, in steps 6 and 8): ##
 
 1. Download RWrap. run **make && (sudo)? make install**
 2. Create a directory for you future R package and an /src/ directory in there (this is necessary for R, read their [guide for writing extensions](http://cran.r-project.org/doc/manuals/R-exts.html#System-and-foreign-language-interfaces)).
