@@ -19,7 +19,7 @@ CXXFLAGS=-ggdb
 
 
 
-INCLUDES=FuncTraits.h gen_wrap.h RWrap.h Value.h
+INCLUDES=src/FuncTraits.h src/gen_wrap.h src/RWrap.h src/Value.h
 INCINST=$(PREFIX)/include/RWrap
 BININST=$(PREFIX)/bin
 
@@ -30,11 +30,11 @@ CXX=$(shell R CMD config CXX)
 
 all: Rwrap
 
-Rwrap: Rwrap.cc $(INCLUDES)
+Rwrap: src/Rwrap.cc $(INCLUDES)
 	$(CXX) $(RCFLAGS) $(CXXFLAGS) $< -ldl $(RLDFLAGS) -o $@
 
 
-test: test_rwrap.cc $(INCLUDES)
+test: src/test_rwrap.cc $(INCLUDES)
 	$(CXX) $(RCFLAGS) $(CXXFLAGS) $< -ldl $(RLDFLAGS) -o $@
 
 
