@@ -1,11 +1,11 @@
+* auto-gen TOC:
+{:toc}
+
 # RWrap - a simple yet powerful tool to seamlessly wrap C++ into R. #
 
 Pretty much like Rcpp, but the other way around. Wrap your existing C++ code for use in R, from /outside/ R.
 
 RWrap allows you to quickly publish C++ routines for use in R without any refactoring (provided you wrote them well, of course), and also takes care of generating the corresponding NAMESPACE and glue R script files for you.
-
-* auto-gen TOC:
-{:toc}
 
 ## Steps to create an R package (using RWrap, in step 6.): ##
 
