@@ -37,6 +37,9 @@ Rwrap: src/Rwrap.cc $(INCLUDES)
 test: src/test_rwrap.cc $(INCLUDES)
 	$(CXX) $(RCFLAGS) $(CXXFLAGS) $< -ldl $(RLDFLAGS) -o $@
 
+clean:
+	rm -f Rwrap test
+	cd testshlib && make clean
 
 install: $(INCLUDES) Rwrap
 	mkdir -p $(INCINST)
