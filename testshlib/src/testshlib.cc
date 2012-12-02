@@ -39,11 +39,19 @@ Rwrap::List mydf() {
     return ret;
 }
 
+int mylist(Rwrap::List l) {
+    const char* coin = l["str"];
+    int plop = l["int"];
+    return 42 + 100 * plop;
+}
+
+
 MODULE(testshlib)
     .reg(mul).arg("x").arg("y", "50").auto_glue()
     .reg(isTrue).arg("plop").auto_glue()
     .reg(hazcheez).auto_glue()
     .reg(mydf).wrap_result("as.data.frame(", ")").auto_glue()
     .reg(sqr).arg("vec").auto_glue()
+    .reg(mylist).arg("l").auto_glue()
     ;
 

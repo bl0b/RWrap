@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <cstring>
 
 #include <R.h>
 #include <Rinternals.h>
@@ -90,52 +91,6 @@ struct Value<char*> {
 template <typename T>
 SEXP coerceToR(T v) { return Value<T>::coerceToR(v); }
 
-
-
-
-
-class List {
-    private:
-        std::vector<const char*> names_;
-        std::vector<SEXP> elements_;
-    public:
-        List()
-            : names_(), elements_()
-        {}
-
-        template <typename T>
-        List& add(const char* name, T elem) {
-            names_.push_back(name);
-            SEXP e;
-            PROTECT(e = Value<T>::coerceToR(elem));
-            elements_.push_back(e);
-            return *this;
-        }
-
-        SEXP toR() const {
-            int n = names_.size();
-            SEXP ret;
-            SEXP names;
-            PROTECT(ret = allocVector(VECSXP, n));
-            PROTECT(names = allocVector(VECSXP, n));
-            for(int i = 0; i < n; i++) {
-                SET_VECTOR_ELT(names, i, Value<const char*>::coerceToR(names_[i]));
-                SET_VECTOR_ELT(ret, i, elements_[i]);
-            }
-            setAttrib(ret, R_NamesSymbol, names);
-            UNPROTECT(2 + n);
-            return ret;
-        }
-};
-
-
-template <>
-struct Value<List> {
-    typedef List CType;
-    static SEXP coerceToR(CType v) {
-        return v.toR();
-    }
-};
 
 
 template <typename T>
@@ -232,6 +187,85 @@ struct Value<std::vector<T> > {
             vtraits::Cset(ret, buf, i);
         }
         return ret;
+    }
+};
+
+
+struct generic_value {
+    SEXP v;
+    generic_value(SEXP _) : v(_) {}
+    template <typename T>
+    operator T() const { return Value<T>::coerceToC(v); }
+};
+
+
+class List {
+    private:
+        std::vector<const char*> names_;
+        std::vector<SEXP> elements_;
+    public:
+        List()
+            : names_(), elements_()
+        {}
+
+        List(SEXP list)
+            : names_(), elements_()
+        {
+            int n = length(list);
+            SEXP nm = getAttrib(list, R_NamesSymbol);
+            for(int i = 0; i < n; ++i) {
+                elements_.push_back(VECTOR_ELT(list, i));
+                names_.push_back(CHAR(STRING_ELT(nm, i)));
+            }
+        }
+
+        generic_value operator[](int i) const {
+            return generic_value(elements_.at(i));
+        }
+
+        generic_value operator[](const char* n) const {
+            int i;
+            for (i = 0; i < names_.size() && (!names_[i] || strcmp(names_[i], n)); ++i);
+            if (i == names_.size()) {
+                return NULL;
+            }
+            return generic_value(elements_.at(i));
+        }
+
+        template <typename T>
+        List& add(const char* name, T elem) {
+            names_.push_back(name);
+            SEXP e;
+            PROTECT(e = Value<T>::coerceToR(elem));
+            elements_.push_back(e);
+            return *this;
+        }
+
+        SEXP toR() const {
+            int n = names_.size();
+            SEXP ret;
+            SEXP names;
+            PROTECT(ret = allocVector(VECSXP, n));
+            PROTECT(names = allocVector(VECSXP, n));
+            for(int i = 0; i < n; i++) {
+                SET_VECTOR_ELT(names, i, Value<const char*>::coerceToR(names_[i]));
+                SET_VECTOR_ELT(ret, i, elements_[i]);
+            }
+            setAttrib(ret, R_NamesSymbol, names);
+            UNPROTECT(2 + n);
+            return ret;
+        }
+};
+
+
+template <>
+struct Value<List> {
+    typedef List CType;
+    static SEXP coerceToR(CType v) {
+        return v.toR();
+    }
+    static List coerceToC(SEXP v) {
+        return List(v);
     }
 };
 
