@@ -14,7 +14,7 @@ namespace Rwrap {
 /*integer 	INTSXP */
 /*logical 	LGLSXP */
 /*single 	SINGLESXP */
-/*character STRSXP */
+/*character STRSXP */ /* CHARSXP ? */
 /*list  	VECSXP*/
 
 
@@ -172,7 +172,7 @@ template <> struct RVecTraits<float> {
 };
 
 template <> struct RVecTraits<std::string> {
-    enum { type=STRSXP };
+    enum { type=CHARSXP };
     typedef std::string value_type;
     typedef SEXP RContainerType;
     typedef std::vector<std::string> CVecType;
@@ -186,7 +186,7 @@ template <> struct RVecTraits<std::string> {
 };
 
 template <> struct RVecTraits<char*> {
-    enum { type=STRSXP };
+    enum { type=CHARSXP };
     typedef char* value_type;
     typedef SEXP RContainerType;
     typedef std::vector<char*> CVecType;
@@ -200,7 +200,7 @@ template <> struct RVecTraits<char*> {
 };
 
 template <> struct RVecTraits<const char*> {
-    enum { type=STRSXP };
+    enum { type=CHARSXP };
     typedef const char* value_type;
     typedef SEXP RContainerType;
     typedef std::vector<const char*> CVecType;
