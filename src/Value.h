@@ -14,7 +14,7 @@ namespace Rwrap {
 /*integer 	INTSXP */
 /*logical 	LGLSXP */
 /*single 	SINGLESXP */
-/*character STRSXP */ /* CHARSXP ? */
+/*character STRSXP */
 /*list  	VECSXP*/
 
 
@@ -71,7 +71,7 @@ struct Value<const char*> {
         return CHAR(STRING_ELT(v, 0));
     }
     static SEXP coerceToR(CType v) {
-        return mkString(v);
+        return mkChar(v);
     }
 };
 
@@ -83,7 +83,7 @@ struct Value<char*> {
         return const_cast<CType>(CHAR(STRING_ELT(v, 0)));
     }
     static SEXP coerceToR(CType v) {
-        return mkString(v);
+        return mkChar(v);
     }
 };
 
@@ -95,7 +95,7 @@ struct Value<std::string> {
         return std::string(CHAR(STRING_ELT(v, 0)));
     }
     static SEXP coerceToR(CType v) {
-        return mkString(v.c_str());
+        return mkChar(v.c_str());
     }
 };
 
@@ -172,7 +172,7 @@ template <> struct RVecTraits<float> {
 };
 
 template <> struct RVecTraits<std::string> {
-    enum { type=CHARSXP };
+    enum { type=STRSXP };
     typedef std::string value_type;
     typedef SEXP RContainerType;
     typedef std::vector<std::string> CVecType;
@@ -186,7 +186,7 @@ template <> struct RVecTraits<std::string> {
 };
 
 template <> struct RVecTraits<char*> {
-    enum { type=CHARSXP };
+    enum { type=STRSXP };
     typedef char* value_type;
     typedef SEXP RContainerType;
     typedef std::vector<char*> CVecType;
@@ -200,7 +200,7 @@ template <> struct RVecTraits<char*> {
 };
 
 template <> struct RVecTraits<const char*> {
-    enum { type=CHARSXP };
+    enum { type=STRSXP };
     typedef const char* value_type;
     typedef SEXP RContainerType;
     typedef std::vector<const char*> CVecType;

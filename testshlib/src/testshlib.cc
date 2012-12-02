@@ -49,6 +49,14 @@ double mul10(double ten, double y) {
     return ten * y;
 }
 
+std::vector<const char*> cvec() {
+    std::vector<const char*> ret;
+    ret.push_back("toto");
+    ret.push_back("plop");
+    ret.push_back("coin");
+    return ret;
+}
+
 MODULE(testshlib)
     .reg(mul).arg("x").arg("y", "50").auto_glue()
     .reg(isTrue).arg("plop").auto_glue()
@@ -57,5 +65,6 @@ MODULE(testshlib)
     .reg(sqr).arg("vec").auto_glue()
     .reg(mylist).arg("l").auto_glue()
     .reg(mul10).implicit_arg("10").arg("y").auto_glue()
+    .reg(cvec).auto_glue()
     ;
 
