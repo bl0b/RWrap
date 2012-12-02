@@ -23,6 +23,8 @@ Note most of those steps are R-specific.
 
 ## RWrap magic ##
 
+### Basics ###
+
 Let's say you have this C++ file :
 
     #include <vector>
@@ -62,6 +64,44 @@ To bind it to R, just add a #include at the top and a MODULE declaration at the 
 
 This will take care of everything, from two-way R<->C++ data wrapping (kinda like in Rcpp) to generating the NAMESPACE directives and the /.Call("sumsq", x)/ wrapper in R in the file R/glue.R.
 
+### Goodies ###
+
+#### Named arguments ####
+
+The wrapper function in R will have by default arguments named a, b, c... If argument names are important and/or you want to specify default values, use the convenience arg() function between the calls to reg() and auto_glue().
+
+    MODULE(spiderman)
+        .reg(cast_web).arg("target").arg("size", "length(target)").auto_glue()
+
+This will generate the following glue code :
+
+    cast_web <- function(target, size=length(target)) .Call("cast_web", target, size, package="spiderman")
+
+#### Pre- and Post- processing of results in glue code ####
+
+It is also possible to wrap the result of the .Call in the glue code. Let's say for example you want to actually return a data.frame. The easiest way to achieve this is to return a List of columns and wrap this in a call to as.data.frame().
+
+C++ code :
+
+    Rwrap::List ledger() {
+        Rwrap::List ret;
+        std::vector<double> credit, debit;
+        ...
+        ret.add("credit", credit);
+        ret.add("debit", debit);
+        return ret;
+    }
+    
+    MODULE(bruceWayne)
+        .reg(ledger).wrap_result("as.data.frame(", ")").auto_glue()
+        ;
+
+The generated R glue will be :
+
+    ledger <- function() as.data.frame(.Call("ledger", package="bruceWayne"))
+
+### Wrapped types ###
+
 Rwrap provides automatic wrapping of the following base types (followed by their R equivalents) :
 
 - int (integer)
@@ -85,6 +125,8 @@ List makes it easy to bind complex data with R with a minimalistic interface.
         std::vector<some_wrapped_type> wow = l["how.hard.can.it.be"];
         ...
     }
+
+### Extending RWrap ###
 
 Of course, it's easy to add new types to automatically wrap :
 
