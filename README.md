@@ -129,7 +129,7 @@ List makes it easy to bind complex data with R with a minimalistic interface.
         return ret;
     }
     
-    void myListArg(List l) {
+    void myListArg(Rwrap::List l) {
         some_type foo = l["some_name"];  /* access by name (slow but quite safe) */
         some_other_type bar = l[1];      /* access by index (fast but less safe) */
         std::vector<some_wrapped_type> wow = l["how.hard.can.it.be"];
