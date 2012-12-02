@@ -45,6 +45,9 @@ int mylist(Rwrap::List l) {
     return 42 + 100 * plop;
 }
 
+double mul10(double ten, double y) {
+    return ten * y;
+}
 
 MODULE(testshlib)
     .reg(mul).arg("x").arg("y", "50").auto_glue()
@@ -53,5 +56,6 @@ MODULE(testshlib)
     .reg(mydf).wrap_result("as.data.frame(", ")").auto_glue()
     .reg(sqr).arg("vec").auto_glue()
     .reg(mylist).arg("l").auto_glue()
+    .reg(mul10).implicit_arg("10").arg("y").auto_glue()
     ;
 

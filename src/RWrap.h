@@ -43,9 +43,11 @@ struct reg_helper {
 struct Argument {
     const char* name;
     const char* default_value;
-    Argument(const char* n, const char* def=NULL)
+    bool implicit;
+    Argument(const char* n, const char* def, bool impl)
         : name(n)
         , default_value(def)
+        , implicit(impl)
     {}
 };
 
@@ -104,7 +106,12 @@ public:
     }
 
     Module& arg(const char* n, const char* v=NULL) {
-        args.push_back(Argument(n, v));
+        args.push_back(Argument(n, v, false));
+        return *this;
+    }
+
+    Module& implicit_arg(const char* expr) {
+        args.push_back(Argument(expr, NULL, true));
         return *this;
     }
 
@@ -123,6 +130,9 @@ public:
         }
         if (args.size() == argc) {
             for (int i = 0; i < args.size(); ++i) {
+                if(decl && args[i].implicit) {
+                    continue;
+                }
                 glue << args[i].name;
                 if (decl && args[i].default_value) {
                     glue << '=' << args[i].default_value;

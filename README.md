@@ -10,6 +10,7 @@ RWrap allows you to quickly publish C++ routines for use in R without any refact
   2. [RWrap goodies](#goodies)
       1. [Named arguments](#named-arguments)
       2. [Pre- and Post- processing in glue code](#pre--and-post--processing-of-results-in-glue-code)
+      3. [Implicit arguments](#implicit-arguments)
   3. [Wrapped types](#wrapped-types)
   4. [Extending RWrap](#extending-rwrap)
 
@@ -91,7 +92,7 @@ This will generate the following glue code :
 
 It is also possible to wrap the result of the .Call in the glue code. Let's say for example you want to actually return a data.frame. The easiest way to achieve this is to return a List of columns and wrap this in a call to as.data.frame().
 
-C++ code :
+C++ code:
 
     Rwrap::List ledger() {
         Rwrap::List ret;
@@ -109,6 +110,30 @@ C++ code :
 The generated R glue will be :
 
     ledger <- function() as.data.frame(.Call("ledger", package="bruceWayne"))
+
+#### Implicit arguments ####
+
+In some specific cases, you might want to hide arguments from the R frontend.
+
+Let's say you have this C++ code:
+
+    some_type do_something(my_handle_t global_handle, other_type x) {
+        ...
+    }
+
+But you wish to publish an R function that looks like:
+
+    do_something(x)
+
+You can then user implicit_arg() instead of arg() as follows:
+
+    MODULE(myStuff)
+        .reg(do_something).implicit_arg("an.R.expression").arg("x").auto_glue()
+        ;
+
+The generated glue code will be :
+
+    do_something <- function(x) .Call(an.R.expression, x, package="myStuff")
 
 ### Wrapped types ###
 
