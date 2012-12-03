@@ -1,5 +1,19 @@
 #include <RWrap/RWrap.h>
 
+bool testlgl(bool x) { return !x; }
+int testint(int x) { return -x; }
+double testdouble(double x) { return -x; }
+
+#define REV(name, _type_) \
+    _type_ test##name(_type_ x) { return _type_(x.rbegin(), x.rend()); }
+
+REV(string, std::string);
+REV(veci, std::vector<int>);
+REV(vecd, std::vector<double>);
+REV(vecb, std::vector<bool>);
+REV(vecs, std::vector<std::string>);
+REV(vecs2, std::vector<const char*>);
+
 double mul(double x, double y) {
     return x*y;
 }
@@ -57,7 +71,60 @@ std::vector<const char*> cvec() {
     return ret;
 }
 
+void testvoid(const char* x) {
+    std::cout << x << std::endl;
+}
+
+
+/*SEXP testdf() {*/
+Rwrap::DataFrame testdf() {
+    std::vector<int> a;
+    std::vector<const char*> b;
+    std::vector<double> c;
+    /*Rwrap::List ret;*/
+    Rwrap::DataFrame ret;
+    a.push_back(10);
+    a.push_back(11);
+    a.push_back(12);
+    b.push_back("pouet");
+    b.push_back("plop");
+    b.push_back("coin");
+    c.push_back(23.0);
+    c.push_back(42.0);
+    c.push_back(61.06);
+    ret.add("hop", a);
+    ret.add("zoup", b);
+    ret.add("flourp", c);
+    return ret;
+    /*SEXP expr;*/
+    /*PROTECT(expr = allocList(2));*/
+    /*SET_TYPEOF(expr, LANGSXP);*/
+    /*SETCAR(expr, install("as.data.frame"));*/
+    /*SETCADR(expr, ret.toR());*/
+    /*UNPROTECT(1);*/
+    /*return eval(expr, R_GlobalEnv);*/
+    /*return expr;*/
+}
+
+
+std::vector<int> getCol(Rwrap::List df, int i) {
+    return df[i];
+}
+
+
 MODULE(testshlib)
+    .reg(getCol).arg("df").arg("i").auto_glue()
+    .reg(testdf).auto_glue()
+    .reg(testvoid).auto_glue()
+    .reg(testlgl).arg("x").auto_glue()
+    .reg(testint).arg("x").auto_glue()
+    .reg(testdouble).arg("x").auto_glue()
+    .reg(teststring).arg("x").auto_glue()
+    .reg(testveci).arg("x").auto_glue()
+    .reg(testvecd).arg("x").auto_glue()
+    .reg(testvecb).arg("x").auto_glue()
+    .reg(testvecs).arg("x").auto_glue()
+    .reg(testvecs2).arg("x").auto_glue()
     .reg(mul).arg("x").arg("y", "50").auto_glue()
     .reg(isTrue).arg("plop").auto_glue()
     .reg(hazcheez).auto_glue()

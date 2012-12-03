@@ -71,7 +71,7 @@ struct Value<const char*> {
         return CHAR(STRING_ELT(v, 0));
     }
     static SEXP coerceToR(CType v) {
-        return mkChar(v);
+        return mkString(v);
     }
 };
 
@@ -83,7 +83,7 @@ struct Value<char*> {
         return const_cast<CType>(CHAR(STRING_ELT(v, 0)));
     }
     static SEXP coerceToR(CType v) {
-        return mkChar(v);
+        return mkString(v);
     }
 };
 
@@ -95,7 +95,7 @@ struct Value<std::string> {
         return std::string(CHAR(STRING_ELT(v, 0)));
     }
     static SEXP coerceToR(CType v) {
-        return mkChar(v.c_str());
+        return mkString(v.c_str());
     }
 };
 
@@ -155,15 +155,20 @@ template <> struct RVecTraits<int> : public PODVecTraits<int> {
     using PODVecTraits<int>::Cset;
 };
 
-template <> struct RVecTraits<bool> : public PODVecTraits<int> {
+template <> struct RVecTraits<bool> {
     enum { type=LGLSXP };
-    typedef int value_type;
+    typedef bool value_type;
     typedef int* RContainerType;
+    typedef std::vector<bool> CVecType;
     static RContainerType initRC(SEXP value) {
         return LOGICAL(value);
     }
-    using PODVecTraits<int>::Rset;
-    using PODVecTraits<int>::Cset;
+    static void Rset(RContainerType rc, CVecType& cc, int i) {
+        rc[i] = cc[i];
+    }
+    static void Cset(CVecType& cc, RContainerType rc, int i) {
+        cc.push_back(rc[i]);
+    }
 };
 
 template <> struct RVecTraits<float> {
@@ -178,7 +183,7 @@ template <> struct RVecTraits<std::string> {
     typedef std::vector<std::string> CVecType;
     static RContainerType initRC(SEXP value) { return value; }
     static void Rset(RContainerType rc, CVecType& cc, int i) {
-        SET_STRING_ELT(rc, i, Value<value_type>::coerceToR(cc[i]));
+        SET_STRING_ELT(rc, i, asChar(Value<value_type>::coerceToR(cc[i])));
     }
     static void Cset(CVecType& cc, RContainerType rc, int i) {
         cc.push_back(CHAR(STRING_ELT(rc, i)));
@@ -192,7 +197,7 @@ template <> struct RVecTraits<char*> {
     typedef std::vector<char*> CVecType;
     static RContainerType initRC(SEXP value) { return value; }
     static void Rset(RContainerType rc, CVecType& cc, int i) {
-        SET_STRING_ELT(rc, i, Value<value_type>::coerceToR(cc[i]));
+        SET_STRING_ELT(rc, i, asChar(Value<value_type>::coerceToR(cc[i])));
     }
     static void Cset(CVecType& cc, RContainerType rc, int i) {
         cc.push_back(const_cast<char*>(CHAR(STRING_ELT(rc, i))));
@@ -206,7 +211,7 @@ template <> struct RVecTraits<const char*> {
     typedef std::vector<const char*> CVecType;
     static RContainerType initRC(SEXP value) { return value; }
     static void Rset(RContainerType rc, CVecType& cc, int i) {
-        SET_STRING_ELT(rc, i, Value<value_type>::coerceToR(cc[i]));
+        SET_STRING_ELT(rc, i, asChar(Value<value_type>::coerceToR(cc[i])));
     }
     static void Cset(CVecType& cc, RContainerType rc, int i) {
         cc.push_back(CHAR(STRING_ELT(rc, i)));
@@ -215,6 +220,7 @@ template <> struct RVecTraits<const char*> {
 
 template <typename T>
 struct Value<std::vector<T> > {
+    enum { type=VECSXP };
     typedef std::vector<T> CType;
     typedef RVecTraits<T> vtraits;
 
@@ -291,7 +297,7 @@ class List {
             return *this;
         }
 
-        SEXP toR() const {
+        virtual SEXP toR() const {
             int n = names_.size();
             SEXP ret;
             SEXP names;
@@ -307,6 +313,21 @@ class List {
         }
 };
 
+class DataFrame : public List {
+    public:
+        DataFrame() : List() {}
+        DataFrame(SEXP e) : List(e) {}
+        virtual SEXP toR() const {
+            SEXP expr;
+            PROTECT(expr = allocList(2));
+            SET_TYPEOF(expr, LANGSXP);
+            SETCAR(expr, install("as.data.frame"));
+            SETCADR(expr, List::toR());
+            UNPROTECT(1);
+            return eval(expr, R_GlobalEnv);
+        }
+};
+
 
 template <>
 struct Value<List> {
@@ -316,6 +337,17 @@ struct Value<List> {
     }
     static List coerceToC(SEXP v) {
         return List(v);
+    }
+};
+
+template <>
+struct Value<DataFrame> {
+    typedef DataFrame CType;
+    static SEXP coerceToR(CType v) {
+        return v.toR();
+    }
+    static CType coerceToC(SEXP v) {
+        return DataFrame(v);
     }
 };
 
