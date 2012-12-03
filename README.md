@@ -12,6 +12,9 @@ RWrap allows you to quickly publish C++ routines for use in R without any refact
       2. [Pre- and Post- processing in glue code](#pre--and-post--processing-of-results-in-glue-code)
       3. [Implicit arguments](#implicit-arguments)
   3. [Wrapped types](#wrapped-types)
+      1. [Base types](#base-types)
+      2. [Lists](#lists)
+      3. [Data frames](#data-frames)
   4. [Extending RWrap](#extending-rwrap)
 
 
@@ -137,6 +140,8 @@ The generated glue code will be :
 
 ### Wrapped types ###
 
+#### Base types ####
+
 Rwrap provides automatic wrapping of the following base types (followed by their R equivalents) :
 
 - int (integer)
@@ -145,6 +150,8 @@ Rwrap provides automatic wrapping of the following base types (followed by their
 - std::vector<SOMETHING> (vector)
 - List (list)
 - DataFrame (data.frame)
+
+#### Lists ####
 
 List makes it easy to bind complex data with R with a minimalistic interface.
 
@@ -161,6 +168,8 @@ List makes it easy to bind complex data with R with a minimalistic interface.
         std::vector<some_wrapped_type> wow = l["how.hard.can.it.be"];
         ...
     }
+
+#### Data frames ####
 
 DataFrame is a simple extension to List. A data.frame in R is basically a list of columns (data vectors)
 all the same length and each their own type. The main quirk is that string columns are converted into
