@@ -252,6 +252,21 @@ struct generic_value {
     generic_value(SEXP _) : v(_) {}
     template <typename T>
     operator T() const { return Value<T>::coerceToC(v); }
+    operator std::vector<std::string>() {
+        /* should actually check that class is 'factor'. */
+        SEXP levels = getAttrib(v, install("levels"));
+        return Value<std::vector<std::string> >::coerceToC(levels ? levels : v);
+    }
+    operator std::vector<char*>() {
+        /* should actually check that class is 'factor'. */
+        SEXP levels = getAttrib(v, install("levels"));
+        return Value<std::vector<char*> >::coerceToC(levels ? levels : v);
+    }
+    operator std::vector<const char*>() {
+        /* should actually check that class is 'factor'. */
+        SEXP levels = getAttrib(v, install("levels"));
+        return Value<std::vector<const char*> >::coerceToC(levels ? levels : v);
+    }
 };
 
 

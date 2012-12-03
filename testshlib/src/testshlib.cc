@@ -107,13 +107,18 @@ Rwrap::DataFrame testdf() {
 }
 
 
-std::vector<int> getCol(Rwrap::List df, int i) {
+std::vector<int> getColi(Rwrap::List df, int i) {
+    return df[i];
+}
+
+std::vector<const char*> getCols(Rwrap::List df, int i) {
     return df[i];
 }
 
 
 MODULE(testshlib)
-    .reg(getCol).arg("df").arg("i").auto_glue()
+    .reg(getColi).arg("df").arg("i").auto_glue()
+    .reg(getCols).arg("df").arg("i").auto_glue()
     .reg(testdf).auto_glue()
     .reg(testvoid).auto_glue()
     .reg(testlgl).arg("x").auto_glue()
