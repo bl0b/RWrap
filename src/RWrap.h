@@ -125,10 +125,10 @@ public:
         if (argc == 0) {
             return;
         }
-        if (!decl) {
-            glue << ',';
-        }
         if (args.size() == argc) {
+            if (!decl) {
+                glue << ',';
+            }
             for (int i = 0; i < args.size(); ++i) {
                 if(decl && args[i].implicit) {
                     continue;
@@ -142,7 +142,6 @@ public:
                 }
             }
         } else {
-            glue << 'a';
             for (int i = 0; i < argc; ++i) {
                 glue << ',' << (char)('a' + i);
             }
