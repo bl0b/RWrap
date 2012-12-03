@@ -457,7 +457,9 @@ struct gen : public _gen_<typename F::ret_t, typename F::a1_t,
                           typename F::a11_t, typename F::a12_t> {
     using _gen_<typename F::ret_t, typename F::a1_t, typename F::a2_t,
                 typename F::a3_t, typename F::a4_t, typename F::a5_t,
-                typename F::a6_t>::_w;
+                typename F::a6_t, typename F::a7_t, typename F::a8_t,
+                typename F::a9_t, typename F::a10_t, typename F::a11_t,
+                typename F::a12_t>::_w;
 };
 
 

@@ -15,7 +15,7 @@ template <typename RET,
           typename A5, typename A6, typename A7, typename A8,
           typename A9, typename A10, typename A11, typename A12>
 struct FuncTraits<RET (*)(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12)> {
-    enum { ArgCount=9 };
+    enum { ArgCount=12 };
     typedef RET ret_t;
     typedef A1 a1_t;
     typedef A2 a2_t;
@@ -36,7 +36,7 @@ template <typename RET,
           typename A5, typename A6, typename A7, typename A8,
           typename A9, typename A10, typename A11>
 struct FuncTraits<RET (*)(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11)> {
-    enum { ArgCount=9 };
+    enum { ArgCount=11 };
     typedef RET ret_t;
     typedef A1 a1_t;
     typedef A2 a2_t;
@@ -57,7 +57,7 @@ template <typename RET,
           typename A5, typename A6, typename A7, typename A8,
           typename A9, typename A10>
 struct FuncTraits<RET (*)(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)> {
-    enum { ArgCount=9 };
+    enum { ArgCount=10 };
     typedef RET ret_t;
     typedef A1 a1_t;
     typedef A2 a2_t;
