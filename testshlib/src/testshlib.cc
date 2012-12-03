@@ -99,34 +99,28 @@ void testvoid(const char* x) {
 }
 
 
-/*SEXP testdf() {*/
 Rwrap::DataFrame testdf() {
     std::vector<int> a;
     std::vector<const char*> b;
     std::vector<double> c;
-    /*Rwrap::List ret;*/
-    Rwrap::DataFrame ret;
+
     a.push_back(10);
     a.push_back(11);
     a.push_back(12);
+
     b.push_back("pouet");
     b.push_back("plop");
     b.push_back("coin");
+
     c.push_back(23.0);
     c.push_back(42.0);
     c.push_back(61.06);
+
+    Rwrap::DataFrame ret;
     ret.add("hop", a);
     ret.add("zoup", b);
     ret.add("flourp", c);
     return ret;
-    /*SEXP expr;*/
-    /*PROTECT(expr = allocList(2));*/
-    /*SET_TYPEOF(expr, LANGSXP);*/
-    /*SETCAR(expr, install("as.data.frame"));*/
-    /*SETCADR(expr, ret.toR());*/
-    /*UNPROTECT(1);*/
-    /*return eval(expr, R_GlobalEnv);*/
-    /*return expr;*/
 }
 
 
