@@ -144,6 +144,7 @@ Rwrap provides automatic wrapping of the following base types (followed by their
 - char* and const char* (character)
 - std::vector<SOMETHING> (vector)
 - List (list)
+- DataFrame (data.frame)
 
 List makes it easy to bind complex data with R with a minimalistic interface.
 
@@ -160,6 +161,33 @@ List makes it easy to bind complex data with R with a minimalistic interface.
         std::vector<some_wrapped_type> wow = l["how.hard.can.it.be"];
         ...
     }
+
+DataFrame is a simple extension to List. A data.frame in R is basically a list of columns (data vectors)
+all the same length and each their own type. The main quirk is that string columns are converted into
+factors. The automagic coercion is extended to handle those columns as either a vector of integers or
+a vector of strings.
+
+    Rwrap::DataFrame make_df(...) {
+        std::vector<std::string> col1;
+        std::vector<double> col2;
+        std::vector<int> col3;
+        col1.push_back("pouet");
+        col2.push_back(23.);
+        col3.push_back(42);
+        ...
+        DataFrame ret;
+        ret.add("col.1", col1);
+        ret.add("col.2", col2);
+        ret.add("col.3", col3);
+        return ret;
+    }
+
+    void use_df(Rwrap::DataFrame df, int string_col_index) {
+        std::vector<int> factors = df[string_col_index];
+        std::vector<const char*> strings = df[string_col_index];
+        ...
+    }
+
 
 ### Extending RWrap ###
 
