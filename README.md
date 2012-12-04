@@ -184,7 +184,7 @@ a vector of strings.
         col2.push_back(23.);
         col3.push_back(42);
         ...
-        DataFrame ret;
+        Rwrap::DataFrame ret;
         ret.add("col.1", col1);
         ret.add("col.2", col2);
         ret.add("col.3", col3);
