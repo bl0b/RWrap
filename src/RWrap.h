@@ -104,7 +104,8 @@ public:
         /*printf("   - name: %s\n", name);*/
         /*printf("   - argc: %i\n", argc);*/
         /*printf("   - wrap: %p\n", wrapper);*/
-        routines_.push_back(*(R_CallMethodDef[]){{name, wrapper, argc}});
+        R_CallMethodDef def = {name, wrapper, argc};
+        routines_.push_back(def);
         args.clear();
         wrap_result_prefix.clear();
         wrap_result_suffix.clear();
@@ -188,7 +189,8 @@ public:
     }
 
     void commit(DllInfo* info) {
-        routines_.push_back(*(R_CallMethodDef[]){{NULL, NULL, 0}});
+        R_CallMethodDef null = {NULL, NULL, 0};
+        routines_.push_back(null);
         R_registerRoutines(info, NULL, &routines_[0], NULL, NULL);
         /*parse_and_eval(buf.str().c_str());*/
     }
