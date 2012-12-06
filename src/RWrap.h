@@ -75,12 +75,19 @@ struct Argument {
 };
 
 
+typedef std::vector<const char*> Exports;
+typedef std::vector<std::pair<const char*, const char*> > S3Methods;
+
+
 class Module {
     const char* name;
     std::vector<R_CallMethodDef> routines_;
     std::ostringstream glue;
     std::vector<Argument> args;
     std::string wrap_result_prefix, wrap_result_suffix;
+    Exports exports;
+    S3Methods s3methods;
+    const char* exportpattern;
 
 public:
     Module(const char* name_)
@@ -90,6 +97,9 @@ public:
         , args()
         , wrap_result_prefix()
         , wrap_result_suffix()
+        , exports()
+        , s3methods()
+        , exportpattern(0)
     {}
 
     Module(const Module& m)
@@ -97,6 +107,11 @@ public:
         , routines_(m.routines_)
         , glue(m.glue.str())
         , args(m.args)
+        , wrap_result_prefix(m.wrap_result_prefix)
+        , wrap_result_suffix(m.wrap_result_suffix)
+        , exports(m.exports)
+        , s3methods(m.s3methods)
+        , exportpattern(m.exportpattern)
     {}
 
     Module& _reg(const char* name, int argc, DL_FUNC wrapper) {
@@ -188,6 +203,23 @@ public:
         return *this;
     }
 
+    Module& exportPattern(const char* pat) {
+        exportpattern = pat;
+        return *this;
+    }
+
+    Module& add_export(const char* name) {
+        exports.push_back(name);
+        /*std::cerr << "registered export #" << exports.size() << ' ' << name << std::endl;*/
+        return *this;
+    }
+
+    Module& add_s3method(const char* generic, const char* impl) {
+        s3methods.push_back(std::pair<const char*, const char*>(generic, impl));
+        /*std::cerr << "registered S3 method #" << s3methods.size() << ' ' << generic << '.' << impl << std::endl;*/
+        return *this;
+    }
+
     void commit(DllInfo* info) {
         R_CallMethodDef null = {NULL, NULL, 0};
         routines_.push_back(null);
@@ -201,9 +233,23 @@ public:
         //<< ", .registration=TRUE)" << std::endl;
         ns << ")" << std::endl;
         std::vector<R_CallMethodDef>::const_iterator i, j = routines_.end();
+        std::cerr << "Have " << routines_.size() << " C/C++ exports" << std::endl;
         for (i = routines_.begin(); i != j; i++) {
             /*ns << ", " << i->name;*/
             ns << "export('" << i->name << "')" << std::endl;
+        }
+        if (exportpattern) {
+            ns << "exportPattern('" << exportpattern << "')" << std::endl;
+        }
+        std::cerr << "Have " << exports.size() << " exports" << std::endl;
+        Exports::const_iterator ei, ej = exports.end();
+        for (ei = exports.begin(); ei != ej; ++ei) {
+            ns << "export(" << (*ei) << ')' << std::endl;
+        }
+        S3Methods::const_iterator si, sj = s3methods.end();
+        std::cerr << "Have " << s3methods.size() << " S3 methods" << std::endl;
+        for (si = s3methods.begin(); si != sj; ++si) {
+            ns << "S3method(" << si->first << ", " << si->second << ')' << std::endl;
         }
         /*ns << ")" << std::endl;*/
     }
@@ -230,7 +276,8 @@ extern "C" void R_init_##name__(DllInfo* info) { M##name__.commit(info); } \
 extern "C" void Rwrap_gen() { M##name__.generate_files(); } \
 Rwrap::Module M##name__ = Rwrap::Module(#name__)
 
-#define reg(_func) _reg(#_func, Rwrap::reg_helper<_FT(_func)>::T::ArgCount, (DL_FUNC) Rwrap::reg_helper<_FT(_func)>::G::_w<_func>::_)
+#define reg_name(_name, _func) _reg(_name, Rwrap::reg_helper<_FT(_func)>::T::ArgCount, (DL_FUNC) Rwrap::reg_helper<_FT(_func)>::G::_w<_func>::_)
+#define reg(_func) reg_name(#_func, _func)
 
 
 #endif
