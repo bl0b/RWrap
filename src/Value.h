@@ -62,6 +62,27 @@ struct Value<bool> {
     }
 };
 
+template <>
+struct Value<void*> {
+    typedef void* CType;
+    static CType coerceToC(SEXP v) {
+        return R_ExternalPtrAddr(v);
+    }
+    static SEXP coerceToR(CType v) {
+        return R_MakeExternalPtr(v, R_NilValue, R_NilValue);
+    }
+};
+
+template <typename T>
+struct Value<T*> {
+    typedef T* CType;
+    static CType coerceToC(SEXP v) {
+        return static_cast<T*>(Value<void*>::coerceToC(v));
+    }
+    static SEXP coerceToR(CType v) {
+        return Value<void*>::coerceToR(static_cast<void*>(v));
+    }
+};
 
 template <>
 struct Value<int> {

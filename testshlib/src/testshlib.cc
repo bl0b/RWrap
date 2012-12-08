@@ -22,6 +22,7 @@
  */
 
 #include <RWrap/RWrap.h>
+#include <typeinfo>
 
 bool testlgl(bool x) { return !x; }
 int testint(int x) { return -x; }
@@ -132,8 +133,36 @@ std::vector<const char*> getCols(Rwrap::List df, int i) {
     return df[i];
 }
 
+struct toto {
+    int test(double z) { return 0; }
+};
+
+typedef Rwrap::FuncTraits<BOOST_TYPEOF(&toto::test)> hop;
+
+class pouet {
+    private:
+        int hop;
+    public:
+        pouet() : hop(42) {}
+        void toto() {
+            std::cout << "Called toto " << hop << std::endl;
+        }
+};
+
+pouet* new_pouet() {
+    return new pouet();
+}
+
+void delete_pouet(pouet* p) {
+    delete p;
+}
 
 MODULE(testshlib)
+    .reg(new_pouet).auto_glue()
+    .reg(delete_pouet).arg("p").auto_glue()
+    /*.reg_meth(pouet, toto).auto_glue()*/
+    /*._reg("pouet.toto", 1, (DL_FUNC) Rwrap::gen_meth<pouet, Rwrap::FuncTraits<BOOST_TYPEOF(&pouet::toto)> >::_w<&pouet::toto>::_).arg("this.ptr").auto_glue()*/
+    .reg_meth(pouet, toto).auto_glue()
     .reg(getColi).arg("df").arg("i").auto_glue()
     .reg(getCols).arg("df").arg("i").auto_glue()
     .reg(testdf).auto_glue()
@@ -157,3 +186,11 @@ MODULE(testshlib)
     .reg(cvec).auto_glue()
     ;
 
+#define __(_x_) #_x_
+#define ___(_x_) __(_x_)
+
+
+int main() {
+    std::cout << ___(BOOST_TYPEOF(&toto::test)) << std::endl;
+    std::cout << typeid(BOOST_TYPEOF(&toto::test)).name() << std::endl;
+}

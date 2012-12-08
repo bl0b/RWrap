@@ -44,6 +44,8 @@ struct _gen_;
  * TOO MUCH already anyways.
  */
 
+
+
 /* 0 */
 
 template <>
@@ -55,6 +57,17 @@ struct _gen_<void> {
             return R_NilValue;
         }
     };
+    template <class C>
+    struct _mw {
+        template <void (C::*F)()>
+        struct _w {
+            static SEXP _(SEXP _ptr) {
+                C* this_ = Value<C*>::coerceToC(_ptr);
+                (this_->*F)();
+                return R_NilValue;
+            }
+        };
+    };
 };
 
 template <typename RET>
@@ -63,6 +76,13 @@ struct _gen_<RET> {
     struct _w {
         static SEXP _() {
             return Value<RET>::coerceToR(F());
+        }
+    };
+    template <class C, RET (C::*F)()>
+    struct _mw {
+        static SEXP _(SEXP _ptr) {
+            C* this_ = Value<C*>::coerceToC(_ptr);
+            return Value<RET>::coerceToR(this_->F());
         }
     };
 };

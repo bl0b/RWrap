@@ -290,6 +290,24 @@ struct FuncTraits<RET (*) ()> {
     typedef void a12_t;
 };
 
+template <class C, typename RET>
+struct FuncTraits<RET (C::*) ()> {
+    enum { ArgCount=0 };
+    typedef RET ret_t;
+    typedef void a1_t;
+    typedef void a2_t;
+    typedef void a3_t;
+    typedef void a4_t;
+    typedef void a5_t;
+    typedef void a6_t;
+    typedef void a7_t;
+    typedef void a8_t;
+    typedef void a9_t;
+    typedef void a10_t;
+    typedef void a11_t;
+    typedef void a12_t;
+};
+
 
 }
 

@@ -43,6 +43,7 @@
 #include "Value.h"
 #include "FuncTraits.h"
 #include "gen_wrap.h"
+#include "gen_method_wrap.h"
 
 
 namespace Rwrap {
@@ -60,6 +61,12 @@ template <typename F>
 struct reg_helper {
     typedef FuncTraits<F> T;
     typedef gen<T> G;
+};
+
+template <class C, typename F>
+struct reg_method_helper {
+    typedef FuncTraits<F> T;
+    typedef gen_meth<C, T> G;
 };
 
 
@@ -115,9 +122,9 @@ public:
     {}
 
     Module& _reg(const char* name, int argc, DL_FUNC wrapper) {
-        /*printf("Registering new routine :\n");*/
-        /*printf("   - name: %s\n", name);*/
-        /*printf("   - argc: %i\n", argc);*/
+        printf("Registering new routine :\n");
+        printf("   - name: %s\n", name);
+        printf("   - argc: %i\n", argc);
         /*printf("   - wrap: %p\n", wrapper);*/
         R_CallMethodDef def = {name, wrapper, argc};
         routines_.push_back(def);
@@ -276,8 +283,22 @@ extern "C" void R_init_##name__(DllInfo* info) { M##name__.commit(info); } \
 extern "C" void Rwrap_gen() { M##name__.generate_files(); } \
 Rwrap::Module M##name__ = Rwrap::Module(#name__)
 
-#define reg_name(_name, _func) _reg(_name, Rwrap::reg_helper<_FT(_func)>::T::ArgCount, (DL_FUNC) Rwrap::reg_helper<_FT(_func)>::G::_w<_func>::_)
+#define _RH(_x) Rwrap::reg_helper<_FT(_x)>
+#define _rhG(_x) _RH(_x)::G
+#define _rhT(_x) _RH(_x)::T
+
+#define _RMH(_k, _m) Rwrap::reg_method_helper<_k, BOOST_TYPEOF(&_k::_m)>
+#define _rmhG(_k, _m) _RMH(_k, _m)::G
+#define _rmhT(_k, _m) _RMH(_k, _m)::T
+
+#define _reg_helper(_name, _func) _reg(_name, _rhT(_func)::ArgCount, (DL_FUNC) _rhG(_func)::_w<_func>::_)
+#define _reg_meth_helper(_name, _kls, _meth) _reg(_name, _rmhT(_kls, _meth)::ArgCount + 1, (DL_FUNC) _rmhG(_kls, _meth)::_w<&_kls::_meth>::_)
+
+#define reg_name(_name, _func) _reg_helper(_name, _func)
 #define reg(_func) reg_name(#_func, _func)
+
+#define reg_meth_name(_name, _kls, _meth) _reg_meth_helper(_name, _kls, _meth).arg("this.ptr")
+#define reg_meth(_kls, _meth) reg_meth_name(#_kls "." #_meth, _kls, _meth)
 
 
 #endif

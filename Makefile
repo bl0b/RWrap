@@ -19,7 +19,7 @@ CXXFLAGS=-ggdb
 
 
 
-INCLUDES=src/FuncTraits.h src/gen_wrap.h src/RWrap.h src/Value.h
+INCLUDES=src/FuncTraits.h src/gen_wrap.h src/RWrap.h src/Value.h src/gen_method_wrap.h
 INCINST=$(PREFIX)/include/RWrap
 BININST=$(PREFIX)/bin
 
