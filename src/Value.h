@@ -100,7 +100,7 @@ struct ClassWrap {
     static SEXP coerceToR(CType v) {
         SEXP n = lang3(R_DollarSymbol, install(N::name), install("new"));
         SEXP call = lang2(n, Value<void*>::coerceToR(v));
-        SET_TAG(CADR(call), install("this.ptr"));
+        SET_TAG(CDR(call), install(".ptr"));
         return eval(call, R_GlobalEnv);
     }
 };

@@ -143,6 +143,7 @@ class pouet {
     public:
         int hop;
         pouet() : hop(42) {}
+        pouet(int i) : hop(i) {}
         void toto() {
             std::cout << "Called toto " << hop << std::endl;
         }
@@ -161,6 +162,8 @@ void delete_pouet(pouet* p) {
 
 /*Rwrap::Class c = Rwrap::Class("pouet")*/
 CLASS(pouet)
+    .ctor<pouet()>()
+    .ctor<pouet(int)>()
     .reg_meth(pouet, toto).auto_glue()
     ;
 

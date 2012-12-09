@@ -250,33 +250,43 @@ struct RWrap_base {
 
 class Class : public RWrap_base<Class> {
 public:
-    std::vector<Argument> ctor_args;
+    std::vector<WrapperSettings> ctors;
 
     Class(const char* name_)
         : RWrap_base<Class>(name_)
-        , ctor_args()
+        , ctors()
     {}
     Class(const Class& c)
         : RWrap_base<Class>(c)
-        , ctor_args(c.ctor_args)
+        , ctors(c.ctors)
     {}
 
     void gen_glue(std::ostream& glue, const char* package) const
     {
         glue << name << " <- setRefClass('" << name
              << "', fields=c('this.ptr'), methods=list(" << std::endl
-             << "initialize=function(ptr) { this.ptr <<- ptr }," << std::endl;
+             << "initialize=function(...) { "
+                << "args <- list(...); l <- length(args); n <- names(args); "
+                << "print(args); "
+                << "if (l == 1 && '.ptr' %in% n) { this.ptr <<- args$.ptr } ";
+
+        glue << " else stop(\"Couldn't construct object\") }," << std::endl;
         RWrap_base<Class>::gen_glue(glue, package, " = ", ",", "");
         glue << "))" << std::endl;
     }
 
-    Class& ctor_arg(const char* name, const char* default_value=NULL) {
-        ctor_args.push_back(Argument(name, default_value, false));
+    template <typename FSIG>
+    Class& ctor() {
+        return *this;
     }
 
-    Class& ctor_implicit_arg(const char* name, const char* default_value=NULL) {
-        ctor_args.push_back(Argument(name, default_value, true));
-    }
+    /*Class& ctor_arg(const char* name, const char* default_value=NULL) {*/
+        /*ctor_args.push_back(Argument(name, default_value, false));*/
+    /*}*/
+
+    /*Class& ctor_implicit_arg(const char* name, const char* default_value=NULL) {*/
+        /*ctor_args.push_back(Argument(name, default_value, true));*/
+    /*}*/
 };
 
 class Module : public RWrap_base<Module> {
