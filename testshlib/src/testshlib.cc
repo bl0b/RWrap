@@ -140,9 +140,8 @@ struct toto {
 typedef Rwrap::FuncTraits<BOOST_TYPEOF(&toto::test)> hop;
 
 class pouet {
-    private:
-        int hop;
     public:
+        int hop;
         pouet() : hop(42) {}
         void toto() {
             std::cout << "Called toto " << hop << std::endl;
@@ -157,12 +156,54 @@ void delete_pouet(pouet* p) {
     delete p;
 }
 
+
+
+
+/*Rwrap::Class c = Rwrap::Class("pouet")*/
+CLASS(pouet)
+    .reg_meth(pouet, toto).auto_glue()
+    ;
+
+void modify_pouet(pouet* p) {
+    p->hop = 23;
+}
+
+#if 0
+struct pouet_name { static const char* name; };
+const char* pouet_name::name = "pouet";
+namespace Rwrap {
+    template<> struct Value<pouet*> : public ClassWrap<pouet, pouet_name> {};
+    {
+        typedef pouet* CType;
+        static CType coerceToC(SEXP v) {
+            if (isObject(v)) {
+                /* get('this.ptr', slot(x, '.xData')) */
+                SEXP slot = lang3(install("slot"), v, mkString(".xData"));
+                SEXP get = lang3(install("get"), mkString("this.ptr"), slot);
+                return (CType) Value<void*>::coerceToC(eval(get, R_GlobalEnv));
+            } else {
+                return (CType) Value<void*>::coerceToC(v);
+            }
+        }
+        static SEXP coerceToR(CType v) {
+            SEXP n = lang3(R_DollarSymbol, install("pouet"), install("new"));
+            SEXP call = lang2(n, Value<void*>::coerceToR(v));
+            SET_TAG(CADR(call), install("this.ptr"));
+            return eval(call, R_GlobalEnv);
+            /* pouet$new(this.ptr=<ptr>) */
+        }
+    };
+}
+#endif
+
 MODULE(testshlib)
     .reg(new_pouet).auto_glue()
     .reg(delete_pouet).arg("p").auto_glue()
+    .reg(modify_pouet).arg("p").auto_glue()
     /*.reg_meth(pouet, toto).auto_glue()*/
     /*._reg("pouet.toto", 1, (DL_FUNC) Rwrap::gen_meth<pouet, Rwrap::FuncTraits<BOOST_TYPEOF(&pouet::toto)> >::_w<&pouet::toto>::_).arg("this.ptr").auto_glue()*/
-    .reg_meth(pouet, toto).auto_glue()
+    /*.reg_meth(pouet, toto).auto_glue()*/
+    .add_class(pouet)
     .reg(getColi).arg("df").arg("i").auto_glue()
     .reg(getCols).arg("df").arg("i").auto_glue()
     .reg(testdf).auto_glue()

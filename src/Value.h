@@ -27,6 +27,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <typeinfo>
 
 #include <R.h>
 #include <Rinternals.h>
@@ -81,6 +82,26 @@ struct Value<T*> {
     }
     static SEXP coerceToR(CType v) {
         return Value<void*>::coerceToR(static_cast<void*>(v));
+    }
+};
+
+template <class C, typename N>
+struct ClassWrap {
+    typedef C* CType;
+    static CType coerceToC(SEXP v) {
+        if (isObject(v)) {
+            SEXP slot = lang3(install("slot"), v, mkString(".xData"));
+            SEXP get = lang3(install("get"), mkString("this.ptr"), slot);
+            return (CType) Value<void*>::coerceToC(eval(get, R_GlobalEnv));
+        } else {
+            return (CType) Value<void*>::coerceToC(v);
+        }
+    }
+    static SEXP coerceToR(CType v) {
+        SEXP n = lang3(R_DollarSymbol, install(N::name), install("new"));
+        SEXP call = lang2(n, Value<void*>::coerceToR(v));
+        SET_TAG(CADR(call), install("this.ptr"));
+        return eval(call, R_GlobalEnv);
     }
 };
 

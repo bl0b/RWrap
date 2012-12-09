@@ -85,89 +85,28 @@ struct Argument {
 typedef std::vector<const char*> Exports;
 typedef std::vector<std::pair<const char*, const char*> > S3Methods;
 
-
-class Module {
-    const char* name;
-    std::vector<R_CallMethodDef> routines_;
-    std::ostringstream glue;
+struct WrapperSettings {
+    const char* r_name;
     std::vector<Argument> args;
     std::string wrap_result_prefix, wrap_result_suffix;
-    Exports exports;
-    S3Methods s3methods;
-    const char* exportpattern;
+    bool auto_glue;
 
-public:
-    Module(const char* name_)
-        : name(name_)
-        , routines_()
-        , glue()
-        , args()
+    WrapperSettings()
+        : args()
         , wrap_result_prefix()
         , wrap_result_suffix()
-        , exports()
-        , s3methods()
-        , exportpattern(0)
+        , auto_glue(false)
     {}
 
-    Module(const Module& m)
-        : name(m.name)
-        , routines_(m.routines_)
-        , glue(m.glue.str())
-        , args(m.args)
-        , wrap_result_prefix(m.wrap_result_prefix)
-        , wrap_result_suffix(m.wrap_result_suffix)
-        , exports(m.exports)
-        , s3methods(m.s3methods)
-        , exportpattern(m.exportpattern)
+    WrapperSettings(const WrapperSettings& w)
+        : args(w.args)
+        , wrap_result_prefix(w.wrap_result_prefix)
+        , wrap_result_suffix(w.wrap_result_suffix)
+        , auto_glue(w.auto_glue)
     {}
 
-    Module& _reg(const char* name, int argc, DL_FUNC wrapper) {
-        printf("Registering new routine :\n");
-        printf("   - name: %s\n", name);
-        printf("   - argc: %i\n", argc);
-        /*printf("   - wrap: %p\n", wrapper);*/
-        R_CallMethodDef def = {name, wrapper, argc};
-        routines_.push_back(def);
-        args.clear();
-        wrap_result_prefix.clear();
-        wrap_result_suffix.clear();
-        return *this;
-    }
-
-    void parse_and_eval(const char* cmd) {
-        SEXP cmdSexp, cmdexpr, ans = R_NilValue;
-        ParseStatus status;
-        PROTECT(cmdSexp = allocVector(STRSXP, 1));
-        SET_STRING_ELT(cmdSexp, 0, mkChar(cmd));
-        cmdexpr = PROTECT(R_ParseVector(cmdSexp, -1, &status, R_NilValue));
-        if (status != PARSE_OK) {
-            UNPROTECT(2);
-            error("invalid call %s", cmd);
-        }
-        /* Loop is needed here as EXPSEXP will be of length > 1 */
-        for(R_len_t i = 0; i < length(cmdexpr); i++) {
-            ans = eval(VECTOR_ELT(cmdexpr, i), R_GlobalEnv);
-        }
-        UNPROTECT(2);
-    }
-
-    Module& arg(const char* n, const char* v=NULL) {
-        args.push_back(Argument(n, v, false));
-        return *this;
-    }
-
-    Module& implicit_arg(const char* expr) {
-        args.push_back(Argument(expr, NULL, true));
-        return *this;
-    }
-
-    Module& wrap_result(const char* pfx, const char* sfx) {
-        wrap_result_prefix = pfx;
-        wrap_result_suffix = sfx;
-        return *this;
-    }
-
-    void _glue_args(int argc, bool decl) {
+    void _glue_args(std::ostream& glue, int argc, bool decl) const
+    {
         if (argc == 0) {
             return;
         }
@@ -195,18 +134,180 @@ public:
         }
     }
 
-    Module& auto_glue() {
-        const char* fname = routines_.back().name;
-        int argc = routines_.back().numArgs;
+    void gen_glue(std::ostream& glue,
+                  const char* package, const char* rname, const char* cname,
+                  int argc, const char* assign=" <- ",
+                  const char* decl_sep="") const
+    {
+        /*const char* fname = routines_.back().name;*/
+        /*int argc = routines_.back().numArgs;*/
         /*std::ostringstream buf;*/
-        glue << fname << " <- function(";
-        _glue_args(argc, true);
+        glue << rname << assign << "function(";
+        _glue_args(glue, argc, true);
         glue << ") " << wrap_result_prefix
-             << ".Call('" << fname << '\'';
-        _glue_args(argc, false);
-        glue <<  ", PACKAGE='" << name << "')"
-             << wrap_result_suffix << std::endl;
+             << ".Call(" << cname;
+        _glue_args(glue, argc, false);
+        glue <<  ", PACKAGE='" << package << "')"
+             << wrap_result_suffix << decl_sep << std::endl;
         glue.flush();
+    }
+};
+
+template <class Der>
+struct RWrap_base {
+    const char* name;
+    std::vector<R_CallMethodDef> routines_;
+    std::vector<const char*> routine_names;
+    std::vector<WrapperSettings> settings;
+
+    RWrap_base(const char* name_)
+        : name(name_)
+        , routines_()
+        , routine_names()
+        , settings()
+    {}
+    RWrap_base(const RWrap_base& r)
+        : name(r.name)
+        , routines_(r.routines_)
+        , routine_names(r.routine_names)
+        , settings(r.settings)
+    {}
+    virtual ~RWrap_base() {}
+
+    void parse_and_eval(const char* cmd) {
+        SEXP cmdSexp, cmdexpr, ans = R_NilValue;
+        ParseStatus status;
+        PROTECT(cmdSexp = allocVector(STRSXP, 1));
+        SET_STRING_ELT(cmdSexp, 0, mkChar(cmd));
+        cmdexpr = PROTECT(R_ParseVector(cmdSexp, -1, &status, R_NilValue));
+        if (status != PARSE_OK) {
+            UNPROTECT(2);
+            error("invalid call %s", cmd);
+        }
+        /* Loop is needed here as EXPSEXP will be of length > 1 */
+        for(R_len_t i = 0; i < length(cmdexpr); i++) {
+            ans = eval(VECTOR_ELT(cmdexpr, i), R_GlobalEnv);
+        }
+        UNPROTECT(2);
+    }
+
+    Der& arg(const char* n, const char* v=NULL) {
+        settings.back().args.push_back(Argument(n, v, false));
+        return *dynamic_cast<Der*>(this);
+    }
+
+    Der& implicit_arg(const char* expr) {
+        settings.back().args.push_back(Argument(expr, NULL, true));
+        return *dynamic_cast<Der*>(this);
+    }
+
+    Der& wrap_result(const char* pfx, const char* sfx) {
+        settings.back().wrap_result_prefix = pfx;
+        settings.back().wrap_result_suffix = sfx;
+        return *dynamic_cast<Der*>(this);
+    }
+
+    Der& auto_glue() {
+        settings.back().auto_glue = true;
+        return *dynamic_cast<Der*>(this);
+    }
+
+    Der& _reg(const char* rname, const char* cname, int argc, DL_FUNC wrapper) {
+        printf("Registering new routine :\n");
+        printf("   - name: %s\n", cname);
+        printf("   - argc: %i\n", argc);
+        /*printf("   - wrap: %p\n", wrapper);*/
+        R_CallMethodDef def = {cname, wrapper, argc};
+        routines_.push_back(def);
+        routine_names.push_back(rname);
+        settings.push_back(WrapperSettings());
+        return *dynamic_cast<Der*>(this);
+    }
+
+    void gen_glue(std::ostream& glue, const char* package,
+                  const char* assign=" <- ", const char* decl_sep="",
+                  const char* last_decl_sep="") const
+    {
+        std::vector<R_CallMethodDef>::const_iterator ri = routines_.begin(),
+                                                     rj = routines_.end();
+        std::vector<WrapperSettings>::const_iterator si = settings.begin(),
+                                                     sj = settings.end();
+        std::vector<const char*>::const_iterator ni = routine_names.begin(),
+                                                 nj = routine_names.end();
+        if (ri != rj) {
+            --rj;
+        }
+        while(ri != rj && si != sj) {
+            si->gen_glue(glue, package, *ni, ri->name, ri->numArgs, assign, decl_sep);
+            ++si;
+            ++ri;
+            ++ni;
+        }
+        si->gen_glue(glue, package, *ni, ri->name, ri->numArgs, assign, last_decl_sep);
+    }
+};
+
+
+class Class : public RWrap_base<Class> {
+public:
+    std::vector<Argument> ctor_args;
+
+    Class(const char* name_)
+        : RWrap_base<Class>(name_)
+        , ctor_args()
+    {}
+    Class(const Class& c)
+        : RWrap_base<Class>(c)
+        , ctor_args(c.ctor_args)
+    {}
+
+    void gen_glue(std::ostream& glue, const char* package) const
+    {
+        glue << name << " <- setRefClass('" << name
+             << "', fields=c('this.ptr'), methods=list(" << std::endl
+             << "initialize=function(ptr) { this.ptr <<- ptr }," << std::endl;
+        RWrap_base<Class>::gen_glue(glue, package, " = ", ",", "");
+        glue << "))" << std::endl;
+    }
+
+    Class& ctor_arg(const char* name, const char* default_value=NULL) {
+        ctor_args.push_back(Argument(name, default_value, false));
+    }
+
+    Class& ctor_implicit_arg(const char* name, const char* default_value=NULL) {
+        ctor_args.push_back(Argument(name, default_value, true));
+    }
+};
+
+class Module : public RWrap_base<Module> {
+    std::vector<Class*> classes;
+    Exports exports;
+    S3Methods s3methods;
+    const char* exportpattern;
+
+public:
+    Module(const char* name_)
+        : RWrap_base<Module>(name_)
+        , classes()
+        , exports()
+        , s3methods()
+        , exportpattern(0)
+    {}
+
+    Module(const Module& m)
+        : RWrap_base<Module>(m)
+        , classes(m.classes)
+        , exports(m.exports)
+        , s3methods(m.s3methods)
+        , exportpattern(m.exportpattern)
+    {}
+
+    Module& add_class_(Class& c) {
+        routines_.insert(routines_.end(), c.routines_.begin(), c.routines_.end());
+        settings.insert(settings.end(), c.settings.begin(), c.settings.end());
+        routine_names.insert(routine_names.end(), c.routine_names.begin(), c.routine_names.end());
+        std::cout << "Adding class " << c.name << std::endl;
+        classes.push_back(&c);
         return *this;
     }
 
@@ -234,27 +335,40 @@ public:
         /*parse_and_eval(buf.str().c_str());*/
     }
 
+    void export_routines(std::ostream& ns, const std::vector<R_CallMethodDef>& rvec) const {
+        std::vector<R_CallMethodDef>::const_iterator i, j = rvec.end();
+        std::vector<const char*>::const_iterator ni = routine_names.begin(),
+                                                 nj = routine_names.end();
+        /*std::cerr << "Have " << rvec.size() << " C/C++ exports" << std::endl;*/
+        for (i = rvec.begin(); i != j; ++i, ++ni) {
+            /*ns << "export('" << i->name << "')" << std::endl;*/
+            ns << "export('" << (*ni) << "')" << std::endl;
+        }
+    }
+
     void generate_namespace() const {
         std::ofstream ns("NAMESPACE");
         ns << "useDynLib(" << name;
-        //<< ", .registration=TRUE)" << std::endl;
+        ns << ", .registration=TRUE" << std::endl;
         ns << ")" << std::endl;
-        std::vector<R_CallMethodDef>::const_iterator i, j = routines_.end();
-        std::cerr << "Have " << routines_.size() << " C/C++ exports" << std::endl;
-        for (i = routines_.begin(); i != j; i++) {
-            /*ns << ", " << i->name;*/
-            ns << "export('" << i->name << "')" << std::endl;
+        export_routines(ns, routines_);
+        std::vector<Class*>::const_iterator ci = classes.begin(),
+                                            cj = classes.end();
+        while(ci != cj) {
+            export_routines(ns, (*ci)->routines_);
+            ns << "export(" << (*ci)->name << ')' << std::endl;
+            ++ci;
         }
         if (exportpattern) {
             ns << "exportPattern('" << exportpattern << "')" << std::endl;
         }
-        std::cerr << "Have " << exports.size() << " exports" << std::endl;
+        /*std::cerr << "Have " << exports.size() << " exports" << std::endl;*/
         Exports::const_iterator ei, ej = exports.end();
         for (ei = exports.begin(); ei != ej; ++ei) {
             ns << "export(" << (*ei) << ')' << std::endl;
         }
         S3Methods::const_iterator si, sj = s3methods.end();
-        std::cerr << "Have " << s3methods.size() << " S3 methods" << std::endl;
+        /*std::cerr << "Have " << s3methods.size() << " S3 methods" << std::endl;*/
         for (si = s3methods.begin(); si != sj; ++si) {
             ns << "S3method(" << si->first << ", " << si->second << ')' << std::endl;
         }
@@ -265,7 +379,14 @@ public:
         /*printf("glue code:\n%s\n", glue.str().c_str());*/
         ::mkdir("R", 0755);
         std::ofstream g("R/glue.R");
-        g << glue.str() << std::endl;
+        gen_glue(g, name);
+        std::vector<Class*>::const_iterator ci = classes.begin(),
+                                            cj = classes.end();
+        while(ci != cj) {
+            std::cout << "got class " << (*ci)->name << std::endl;
+            (*ci)->gen_glue(g, name);
+            ++ci;
+        }
         g.flush();
     }
 
@@ -283,6 +404,19 @@ extern "C" void R_init_##name__(DllInfo* info) { M##name__.commit(info); } \
 extern "C" void Rwrap_gen() { M##name__.generate_files(); } \
 Rwrap::Module M##name__ = Rwrap::Module(#name__)
 
+
+#define CLASS(_kls) \
+struct _kls##name { static const char* name; }; \
+const char* _kls##name::name = #_kls; \
+namespace Rwrap { \
+    template <> \
+    struct Value<_kls*> \
+        : public ClassWrap<_kls, _kls##name> \
+    {}; \
+} \
+Rwrap::Class _rwrap_class_##_kls = Rwrap::Class(#_kls)
+
+
 #define _RH(_x) Rwrap::reg_helper<_FT(_x)>
 #define _rhG(_x) _RH(_x)::G
 #define _rhT(_x) _RH(_x)::T
@@ -291,14 +425,15 @@ Rwrap::Module M##name__ = Rwrap::Module(#name__)
 #define _rmhG(_k, _m) _RMH(_k, _m)::G
 #define _rmhT(_k, _m) _RMH(_k, _m)::T
 
-#define _reg_helper(_name, _func) _reg(_name, _rhT(_func)::ArgCount, (DL_FUNC) _rhG(_func)::_w<_func>::_)
-#define _reg_meth_helper(_name, _kls, _meth) _reg(_name, _rmhT(_kls, _meth)::ArgCount + 1, (DL_FUNC) _rmhG(_kls, _meth)::_w<&_kls::_meth>::_)
+#define _reg_helper(_rname, _cname, _func) _reg(_rname, _cname, _rhT(_func)::ArgCount, (DL_FUNC) _rhG(_func)::_w<_func>::_)
+#define _reg_meth_helper(_rname, _cname, _kls, _meth) _reg(_rname, _cname, _rmhT(_kls, _meth)::ArgCount + 1, (DL_FUNC) _rmhG(_kls, _meth)::_w<&_kls::_meth>::_)
 
-#define reg_name(_name, _func) _reg_helper(_name, _func)
-#define reg(_func) reg_name(#_func, _func)
+#define reg_name(_rname, _cname, _func) _reg_helper(_rname, _cname, _func)
+#define reg(_func) reg_name(#_func, #_func "_", _func)
 
-#define reg_meth_name(_name, _kls, _meth) _reg_meth_helper(_name, _kls, _meth).arg("this.ptr")
-#define reg_meth(_kls, _meth) reg_meth_name(#_kls "." #_meth, _kls, _meth)
+#define reg_meth_name(_rname, _cname, _kls, _meth) _reg_meth_helper(_rname, _cname, _kls, _meth).implicit_arg("this.ptr")
+#define reg_meth(_kls, _meth) reg_meth_name(#_meth, "." #_meth "." #_kls "_", _kls, _meth)
 
+#define add_class(_k) add_class_(_rwrap_class_##_k)
 
 #endif
