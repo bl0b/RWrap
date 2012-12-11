@@ -32,8 +32,8 @@
 #include <fstream>
 #include <vector>
 
-#include <boost/type_traits.hpp>
-#include <boost/typeof/std/utility.hpp>
+/*#include <boost/type_traits.hpp>*/
+/*#include <boost/typeof/std/utility.hpp>*/
 
 #include <R.h>
 #include <Rinternals.h>
@@ -44,6 +44,7 @@
 #include "FuncTraits.h"
 #include "gen_wrap.h"
 #include "gen_method_wrap.h"
+#include "static_ctor.h"
 
 
 namespace Rwrap {
@@ -54,7 +55,10 @@ template <typename T> struct is_void { enum { value=true }; };
 template <> struct is_void<void> { enum { value=false }; };
 
 
-#define _FT(_func) boost::add_pointer<BOOST_TYPEOF(_func) >::type
+/*template <typename X>*/
+/*struct remove_class {*/
+    /*typedef X type;*/
+/*};*/
 
 
 template <typename F>
@@ -289,6 +293,122 @@ public:
     /*}*/
 };
 
+
+template <class C>
+class BoundClass : public Class {
+public:
+    template <typename RET,
+              typename A1=void, typename A2=void, typename A3=void,
+              typename A4=void, typename A5=void, typename A6=void,
+              typename A7=void, typename A8=void, typename A9=void,
+              typename A10=void, typename A11=void, typename A12=void>
+    struct _gen : public _gen_meth_<C, RET, A1, A2, A3,  A4,  A5,  A6,
+                                            A7, A8, A9, A10, A11, A12>
+    {
+        using _gen_meth_<C, RET, A1, A2, A3,  A4,  A5,  A6,
+                                 A7, A8, A9, A10, A11, A12>::_w;
+    };
+
+    BoundClass(const char* name_)
+        : Class(name_)
+    {}
+    BoundClass(const Class& c)
+        : Class(c)
+    {}
+
+    BoundClass<C>& arg(const char* n, const char* v=NULL) {
+        Class::arg(n, v);
+        return *this;
+    }
+
+    BoundClass<C>& implicit_arg(const char* expr) {
+        Class::implicit_arg(expr);
+        return *this;
+    }
+
+    BoundClass<C>& wrap_result(const char* pfx, const char* sfx) {
+        Class::wrap_result(pfx, sfx);
+        return *this;
+    }
+
+    BoundClass<C>& auto_glue() {
+        Class::auto_glue();
+        return *this;
+    }
+
+    template <typename SIG>
+    struct regger {
+        BoundClass<C>& this_;
+        regger(BoundClass<C>& c) : this_(c) {}
+        template <SIG F>
+        BoundClass<C>& _(const char* rname, const char* cname) {
+            typedef typename remove_ptr<SIG>::type FSIG;
+            typedef gen_meth<C, FuncTraits<FSIG> > M;
+            this_._reg(rname, cname, M::FT::ArgCount, (DL_FUNC) (M::template _w<F>::_));
+            return this_;
+        }
+    };
+
+    template <typename SIG>
+    regger<SIG> make_regger(SIG F) {
+        return regger<SIG>(*this);
+    }
+
+    BoundClass<C> ctor() {
+        typedef static_ctor<C*()> CTOR;
+        static CTOR with_name(name);
+        _reg(with_name.rname.c_str(), with_name.cname.c_str(), 0,
+             (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
+        return *this;
+    }
+
+    template <typename A1>
+    BoundClass<C> ctor() {
+        typedef static_ctor<C*(A1)> CTOR;
+        static CTOR with_name(name);
+        _reg(with_name.rname.c_str(), with_name.cname.c_str(), 1,
+             (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
+        return *this;
+    }
+
+    template <typename A1, typename A2>
+    BoundClass<C> ctor() {
+        typedef static_ctor<C*(A1, A2)> CTOR;
+        static CTOR with_name(name);
+        _reg(with_name.rname.c_str(), with_name.cname.c_str(), 2,
+             (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
+        return *this;
+    }
+
+    template <typename A1, typename A2, typename A3>
+    BoundClass<C> ctor() {
+        typedef static_ctor<C*(A1, A2, A3)> CTOR;
+        static CTOR with_name(name);
+        _reg(with_name.rname.c_str(), with_name.cname.c_str(), 3,
+             (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
+        return *this;
+    }
+
+    template <typename A1, typename A2, typename A3, typename A4>
+    BoundClass<C> ctor() {
+        typedef static_ctor<C*(A1, A2, A3, A4)> CTOR;
+        static CTOR with_name(name);
+        _reg(with_name.rname.c_str(), with_name.cname.c_str(), 4,
+             (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
+        return *this;
+    }
+
+    template <typename A1, typename A2, typename A3, typename A4, typename A5>
+    BoundClass<C> ctor() {
+        typedef static_ctor<C*(A1, A2, A3, A4, A5)> CTOR;
+        static CTOR with_name(name);
+        _reg(with_name.rname.c_str(), with_name.cname.c_str(), 5,
+             (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
+        return *this;
+    }
+};
+
+
 class Module : public RWrap_base<Module> {
     std::vector<Class*> classes;
     Exports exports;
@@ -424,25 +544,31 @@ namespace Rwrap { \
         : public ClassWrap<_kls, _kls##name> \
     {}; \
 } \
-Rwrap::Class _rwrap_class_##_kls = Rwrap::Class(#_kls)
+Rwrap::BoundClass<_kls> _rwrap_class_##_kls = Rwrap::BoundClass<_kls>(#_kls)
 
 
 #define _RH(_x) Rwrap::reg_helper<_FT(_x)>
 #define _rhG(_x) _RH(_x)::G
 #define _rhT(_x) _RH(_x)::T
 
-#define _RMH(_k, _m) Rwrap::reg_method_helper<_k, BOOST_TYPEOF(&_k::_m)>
+#define _RMH(_k, _m) Rwrap::reg_method_helper<_k, _MT(&_k::_m)>
 #define _rmhG(_k, _m) _RMH(_k, _m)::G
 #define _rmhT(_k, _m) _RMH(_k, _m)::T
 
 #define _reg_helper(_rname, _cname, _func) _reg(_rname, _cname, _rhT(_func)::ArgCount, (DL_FUNC) _rhG(_func)::_w<_func>::_)
-#define _reg_meth_helper(_rname, _cname, _kls, _meth) _reg(_rname, _cname, _rmhT(_kls, _meth)::ArgCount + 1, (DL_FUNC) _rmhG(_kls, _meth)::_w<&_kls::_meth>::_)
 
 #define reg_name(_rname, _cname, _func) _reg_helper(_rname, _cname, _func)
 #define reg(_func) reg_name(#_func, #_func "_", _func)
 
+#if 0
+#define _reg_meth_helper(_rname, _cname, _kls, _meth) _reg(_rname, _cname, _rmhT(_kls, _meth)::ArgCount + 1, (DL_FUNC) _rmhG(_kls, _meth)::_w<&_kls::_meth>::_)
 #define reg_meth_name(_rname, _cname, _kls, _meth) _reg_meth_helper(_rname, _cname, _kls, _meth).implicit_arg("this.ptr")
 #define reg_meth(_kls, _meth) reg_meth_name(#_meth, "." #_meth "." #_kls "_", _kls, _meth)
+#endif
+
+
+#define method_name(_rname, _cname, _kls, _meth) make_regger(&_kls::_meth)._<&_kls::_meth>(_rname, _cname)
+#define method(_kls, _meth) method_name(#_meth, "." #_meth "." #_kls "_", _kls, _meth)
 
 #define add_class(_k) add_class_(_rwrap_class_##_k)
 

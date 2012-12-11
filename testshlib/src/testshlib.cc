@@ -137,7 +137,8 @@ struct toto {
     int test(double z) { return 0; }
 };
 
-typedef Rwrap::FuncTraits<BOOST_TYPEOF(&toto::test)> hop;
+/*typedef Rwrap::FuncTraits<BOOST_TYPEOF(&toto::test)> hop;*/
+typedef Rwrap::FuncTraits<_FT(&toto::test)> hop;
 
 class pouet {
     public:
@@ -147,6 +148,7 @@ class pouet {
         void toto() {
             std::cout << "Called toto " << hop << std::endl;
         }
+        void plop(int, double, const char*, bool, std::string&) {}
 };
 
 pouet* new_pouet() {
@@ -162,9 +164,9 @@ void delete_pouet(pouet* p) {
 
 /*Rwrap::Class c = Rwrap::Class("pouet")*/
 CLASS(pouet)
-    .ctor<pouet()>()
-    .ctor<pouet(int)>()
-    .reg_meth(pouet, toto).auto_glue()
+    .ctor()
+    .ctor<int>().arg("some.int")
+    .method(pouet, toto).auto_glue()
     ;
 
 void modify_pouet(pouet* p) {
@@ -206,7 +208,8 @@ MODULE(testshlib)
     /*.reg_meth(pouet, toto).auto_glue()*/
     /*._reg("pouet.toto", 1, (DL_FUNC) Rwrap::gen_meth<pouet, Rwrap::FuncTraits<BOOST_TYPEOF(&pouet::toto)> >::_w<&pouet::toto>::_).arg("this.ptr").auto_glue()*/
     /*.reg_meth(pouet, toto).auto_glue()*/
-    .add_class(pouet)
+
+    /*.add_class(pouet)*/
     .reg(getColi).arg("df").arg("i").auto_glue()
     .reg(getCols).arg("df").arg("i").auto_glue()
     .reg(testdf).auto_glue()
@@ -233,8 +236,18 @@ MODULE(testshlib)
 #define __(_x_) #_x_
 #define ___(_x_) __(_x_)
 
+struct mustfail {
+    void pouet();
+};
 
 int main() {
-    std::cout << ___(BOOST_TYPEOF(&toto::test)) << std::endl;
-    std::cout << typeid(BOOST_TYPEOF(&toto::test)).name() << std::endl;
+    /*std::cout << ___(BOOST_TYPEOF(&toto::test)) << std::endl;*/
+    /*std::cout << typeid(BOOST_TYPEOF(&toto::test)).name() << std::endl;*/
+    Rwrap::BoundClass<pouet> bc("pouet");
+    bc.make_regger(&pouet::toto)._<&pouet::toto>("rname", "cname");
+    /*bc.make_regger(&mustfail::pouet)._<&mustfail::pouet>("rname", "cname");*/
+    /*bc._reg("rname", "cname", &pouet::toto);*/
+    /*bc._reg("rname", "cname", &pouet::plop);*/
+    std::cout << typeid(int).name() << std::endl;
+    return 0;
 }
