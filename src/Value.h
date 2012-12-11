@@ -67,9 +67,12 @@ template <>
 struct Value<void*> {
     typedef void* CType;
     static CType coerceToC(SEXP v) {
-        return R_ExternalPtrAddr(v);
+        void* ret = R_ExternalPtrAddr(v);
+        std::cerr << "R->C ret=" << ret << std::endl;
+        return ret;
     }
     static SEXP coerceToR(CType v) {
+        std::cerr << "C->R ptr=" << v << std::endl;
         return R_MakeExternalPtr(v, R_NilValue, R_NilValue);
     }
 };

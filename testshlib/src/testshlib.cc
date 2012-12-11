@@ -165,7 +165,7 @@ void delete_pouet(pouet* p) {
 /*Rwrap::Class c = Rwrap::Class("pouet")*/
 CLASS(pouet)
     .ctor()
-    .ctor<int>().arg("some.int")
+    .ctor<int>("some.int")
     .method(pouet, toto).auto_glue()
     ;
 
@@ -231,6 +231,8 @@ MODULE(testshlib)
     .reg(mylist).arg("l").auto_glue()
     .reg(mul10).implicit_arg("10").arg("y").auto_glue()
     .reg(cvec).auto_glue()
+
+    .add_class(pouet)
     ;
 
 #define __(_x_) #_x_

@@ -254,8 +254,9 @@ struct RWrap_base {
 
 class Class : public RWrap_base<Class> {
 public:
-    std::vector<WrapperSettings*> ctors;
-    std::vector<R_CallMethodDef*> ctor_syms;
+    std::vector<unsigned int> ctors;
+    /*std::vector<WrapperSettings*> ctors;*/
+    /*std::vector<R_CallMethodDef*> ctor_syms;*/
 
     Class(const char* name_)
         : RWrap_base<Class>(name_)
@@ -274,20 +275,25 @@ public:
                 << "args <- list(...); l <- length(args); n <- names(args); "
                 << "print(args); "
                 << "if (l == 1 && '.ptr' %in% n) { this.ptr <<- args$.ptr }";
-        std::vector<WrapperSettings*>::const_iterator ci, cj = ctors.end();
-        std::vector<R_CallMethodDef*>::const_iterator si, sj = ctor_syms.end();
-        for(ci = ctors.begin(), si = ctor_syms.begin(); ci != cj; ++ci, ++si) {
-            WrapperSettings* ws = *ci;
-            glue << " else if (l == " << ws->args.size();
-            std::vector<Argument>::const_iterator ai, aj = ws->args.end();
-            for(ai = ws->args.begin(); ai != aj; ++ai) {
+        std::vector<unsigned int>::const_iterator ctori, ctorj = ctors.end();
+        for(ctori = ctors.begin(); ctori != ctorj; ++ctori) {
+            const WrapperSettings& ws = settings[*ctori];
+            const R_CallMethodDef& routine = routines_[*ctori];
+            glue << " else if (l == " << ws.args.size();
+            std::cout << " else if (l == " << ws.args.size();
+            std::vector<Argument>::const_iterator ai, aj = ws.args.end();
+            for(ai = ws.args.begin(); ai != aj; ++ai) {
                 glue << " && '" << ai->name << "' %in% n";
+                std::cout << " && '" << ai->name << "' %in% n";
             }
-            glue << ") { this.ptr <<- .Call(" << si->name;
-            for(ai = ws->args.begin(); ai != aj; ++ai) {
+            glue << ") { cat('" << routine.name << "\\n'); this.ptr <<- .Call(" << routine.name;
+            std::cout << ") { this.ptr <<- .Call(" << routine.name;
+            for(ai = ws.args.begin(); ai != aj; ++ai) {
                 glue << ", args$" << ai->name;
+                std::cout << ", args$" << ai->name;
             }
-            glue << ", package='" << package << "') }"
+            glue << ", PACKAGE='" << package << "') }";
+            std::cout << ", PACKAGE='" << package << "') }" << std::endl;
         }
         glue << " else stop(\"Couldn't construct object\") }," << std::endl;
         RWrap_base<Class>::gen_glue(glue, package, " = ", ",", "");
@@ -295,6 +301,15 @@ public:
     }
 };
 
+template <class C>
+struct dtor {
+    std::string dn;
+    dtor(const char* name) {
+        dn = name;
+        dn += ".dtor_";
+    }
+    static void _(C* ptr) { delete ptr; }
+};
 
 template <class C>
 class BoundClass : public Class {
@@ -313,7 +328,15 @@ public:
 
     BoundClass(const char* name_)
         : Class(name_)
-    {}
+    {
+        /* register automatic dtor */
+        typedef dtor<C> DTOR;
+        static DTOR d(name);
+        typedef gen<FuncTraits<_FT(DTOR::_)> > G;
+        _reg("delete", d.dn.c_str(), 1, (DL_FUNC) G::template _w<DTOR::_>::_);
+        implicit_arg("this.ptr");
+        wrap_result("{ ", "; this.ptr <<- NULL }");
+    }
     BoundClass(const Class& c)
         : Class(c)
     {}
@@ -346,7 +369,8 @@ public:
         BoundClass<C>& _(const char* rname, const char* cname) {
             typedef typename remove_ptr<SIG>::type FSIG;
             typedef gen_meth<C, FuncTraits<FSIG> > M;
-            this_._reg(rname, cname, M::FT::ArgCount, (DL_FUNC) (M::template _w<F>::_));
+            this_._reg(rname, cname, M::FT::ArgCount + 1,
+                       (DL_FUNC) (M::template _w<F>::_)).implicit_arg("this.ptr");
             return this_;
         }
     };
@@ -361,152 +385,161 @@ public:
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 0,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
+        ctors.push_back(routines_.size() - 1);
         return *this;
     }
 
     template <typename A1>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1) {
         typedef static_ctor<C*(A1)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 1,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1);
     }
 
     template <typename A1, typename A2>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2) {
         typedef static_ctor<C*(A1, A2)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 2,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2);
     }
 
     template <typename A1, typename A2, typename A3>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3) {
         typedef static_ctor<C*(A1, A2, A3)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 3,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3);
     }
 
     template <typename A1, typename A2, typename A3, typename A4>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4) {
         typedef static_ctor<C*(A1, A2, A3, A4)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 4,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 5,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5,
               typename A6>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5, const char* a6) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5, A6)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 6,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5,
               typename A6, typename A7>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5, const char* a6,
+                       const char* a7) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5, A6, A7)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 7,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5,
               typename A6, typename A7, typename A8>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5, const char* a6,
+                       const char* a7, const char* a8) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 8,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).arg(a8);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5,
               typename A6, typename A7, typename A8, typename A9>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5, const char* a6,
+                       const char* a7, const char* a8, const char* a9) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 9,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).
+               arg(a8).arg(a9);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5,
               typename A6, typename A7, typename A8, typename A9, typename A10>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5, const char* a6,
+                       const char* a7, const char* a8, const char* a9,
+                       const char* a10) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 10,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).
+               arg(a8).arg(a9).arg(a10);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5,
               typename A6, typename A7, typename A8, typename A9, typename A10,
               typename A11>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5, const char* a6,
+                       const char* a7, const char* a8, const char* a9,
+                       const char* a10, const char* a11) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10,
                                A11)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 11,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).
+               arg(a8).arg(a9).arg(a10).arg(a11);
     }
 
     template <typename A1, typename A2, typename A3, typename A4, typename A5,
               typename A6, typename A7, typename A8, typename A9, typename A10,
               typename A11, typename A12>
-    BoundClass<C> ctor() {
+    BoundClass<C> ctor(const char* a1, const char* a2, const char* a3,
+                       const char* a4, const char* a5, const char* a6,
+                       const char* a7, const char* a8, const char* a9,
+                       const char* a10, const char* a11, const char* a12) {
         typedef static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10,
                                A11, A12)> CTOR;
         static CTOR with_name(name);
         _reg(with_name.rname.c_str(), with_name.cname.c_str(), 12,
              (DL_FUNC) CTOR::G::template _w<CTOR::new_>::_);
-        ctors.push_back(&settings.back());
-        ctor_syms.push_back(&routines_.back());
-        return *this;
+        ctors.push_back(routines_.size() - 1);
+        return arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).
+               arg(a8).arg(a9).arg(a10).arg(a11).arg(a12);
     }
 };
 

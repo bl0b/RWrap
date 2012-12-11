@@ -14,7 +14,14 @@ template <> void to_str<void>(std::string&s) {}
 template <typename FSIG>
 struct static_ctor_base {
     typedef FuncTraits<typename add_ptr<FSIG>::type> sig_traits;
-    typedef gen<sig_traits> G;
+    /*typedef gen<sig_traits> G;*/
+    typedef _gen_<void*,
+                  typename sig_traits::a1_t, typename sig_traits::a2_t,
+                  typename sig_traits::a3_t, typename sig_traits::a4_t,
+                  typename sig_traits::a5_t, typename sig_traits::a6_t,
+                  typename sig_traits::a7_t, typename sig_traits::a8_t,
+                  typename sig_traits::a9_t, typename sig_traits::a10_t,
+                  typename sig_traits::a11_t, typename sig_traits::a12_t> G;
     std::string rname, cname;
     static_ctor_base(const char* class_name) {
         rname = class_name;
@@ -44,7 +51,7 @@ struct static_ctor<C*()> : public static_ctor_base<C*()> {
     static_ctor(const char* class_name)
         : static_ctor_base<C*()>(class_name)
     {}
-    static C* new_() { return new C(); }
+    static void* new_() { return new C(); }
 };
 
 template <class C, typename A1>
@@ -53,7 +60,7 @@ struct static_ctor<C*(A1)> : public static_ctor_base<C*(A1)> {
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1)>(class_name)
     {}
-    static C* new_(A1 a1) { return new C(a1); }
+    static void* new_(A1 a1) { return new C(a1); }
 };
 
 template <class C, typename A1, typename A2>
@@ -62,7 +69,7 @@ struct static_ctor<C*(A1, A2)> : public static_ctor_base<C*(A1, A2)> {
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2) { return new C(a1, a2); }
+    static void* new_(A1 a1, A2 a2) { return new C(a1, a2); }
 };
 
 template <class C, typename A1, typename A2, typename A3>
@@ -71,7 +78,7 @@ struct static_ctor<C*(A1, A2, A3)> : public static_ctor_base<C*(A1, A2, A3)> {
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2, A3)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3) { return new C(a1, a2, a3); }
+    static void* new_(A1 a1, A2 a2, A3 a3) { return new C(a1, a2, a3); }
 };
 
 template <class C, typename A1, typename A2, typename A3, typename A4>
@@ -82,7 +89,7 @@ struct static_ctor<C*(A1, A2, A3, A4)>
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2, A3, A4)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4) {
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4) {
         return new C(a1, a2, a3, a4);
     }
 };
@@ -96,7 +103,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5)>
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2, A3, A4, A5)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5) {
         return new C(a1, a2, a3, a4, a5);
     }
 };
@@ -110,7 +117,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5, A6)>
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2, A3, A4, A5, A6)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6) {
         return new C(a1, a2, a3, a4, a5, a6);
     }
 };
@@ -124,7 +131,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5, A6, A7)>
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2, A3, A4, A5, A6, A7)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) {
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7) {
         return new C(a1, a2, a3, a4, a5, a6, a7);
     }
 };
@@ -138,7 +145,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8)>
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2, A3, A4, A5, A6, A7, A8)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8) {
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8) {
         return new C(a1, a2, a3, a4, a5, a6, a7, a8);
     }
 };
@@ -152,7 +159,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9)>
     static_ctor(const char* class_name)
         : static_ctor_base<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
                    A9 a9) {
         return new C(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
@@ -169,7 +176,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10)>
         : static_ctor_base<C*(A1, A2, A3, A4, A5, A6,
                               A7, A8, A9, A10)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
                    A9 a9, A10 a10) {
         return new C(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
@@ -187,7 +194,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11)>
         : static_ctor_base<C*(A1, A2, A3, A4, A5, A6,
                               A7, A8, A9, A10, A11)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
                    A9 a9, A10 a10, A11 a11) {
         return new C(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
     }
@@ -206,7 +213,7 @@ struct static_ctor<C*(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12)>
         : static_ctor_base<C*(A1, A2, A3, A4, A5, A6,
                               A7, A8, A9, A10, A11, A12)>(class_name)
     {}
-    static C* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
+    static void* new_(A1 a1, A2 a2, A3 a3, A4 a4, A5 a5, A6 a6, A7 a7, A8 a8,
                    A9 a9, A10 a10, A11 a11, A12 a12) {
         return new C(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
     }
