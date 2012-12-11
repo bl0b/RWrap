@@ -66,7 +66,7 @@ struct _gen_meth_<C, RET> {
     struct _w {
         static SEXP _(SEXP _ptr) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F());
+            return Value<RET>::coerceToR((this_->*F)());
         }
     };
 };
@@ -79,7 +79,7 @@ struct _gen_meth_<C, void, A1> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a));
+            (this_->*F)(Value<A1>::coerceToC(a));
             return R_NilValue;
         }
     };
@@ -91,7 +91,7 @@ struct _gen_meth_<C, RET, A1> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a)));
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a)));
         }
     };
 };
@@ -104,7 +104,7 @@ struct _gen_meth_<C, void, A1, A2> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b));
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b));
             return R_NilValue;
         }
     };
@@ -116,7 +116,7 @@ struct _gen_meth_<C, RET, A1, A2> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                            Value<A2>::coerceToC(b)));
         }
     };
@@ -130,7 +130,7 @@ struct _gen_meth_<C, RET, A1, A2, A3> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c)));
         }
@@ -143,7 +143,7 @@ struct _gen_meth_<C, void, A1, A2, A3> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
               Value<A3>::coerceToC(c));
             return R_NilValue;
         }
@@ -159,7 +159,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d)));
@@ -173,7 +173,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d));
             return R_NilValue;
         }
@@ -189,7 +189,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e));
             return R_NilValue;
@@ -204,7 +204,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5> {
     struct _w {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d),
@@ -223,7 +223,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5, A6> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f)
         {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                            Value<A3>::coerceToC(c),
                                            Value<A4>::coerceToC(d),
@@ -241,7 +241,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5, A6> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f)
         {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e), Value<A6>::coerceToC(f));
             return R_NilValue;
@@ -259,7 +259,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5, A6, A7> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
                       Value<A7>::coerceToC(g));
@@ -276,7 +276,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5, A6, A7> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d),
@@ -297,7 +297,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5, A6, A7, A8> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
                       Value<A7>::coerceToC(g), Value<A8>::coerceToC(h));
@@ -314,7 +314,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5, A6, A7, A8> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d),
@@ -336,7 +336,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5, A6, A7, A8, A9> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
                       Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
@@ -355,7 +355,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5, A6, A7, A8, A9> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d),
@@ -379,7 +379,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i, SEXP j) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
                       Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
@@ -398,7 +398,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i, SEXP j) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d),
@@ -423,7 +423,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i, SEXP j, SEXP k) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
                       Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
@@ -443,7 +443,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i, SEXP j, SEXP k) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d),
@@ -469,7 +469,7 @@ struct _gen_meth_<C, void, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i, SEXP j, SEXP k, SEXP l) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            this_->*F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+            (this_->*F)(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
                       Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
                       Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
                       Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
@@ -489,7 +489,7 @@ struct _gen_meth_<C, RET, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12> {
         static SEXP _(SEXP _ptr, SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f,
                       SEXP g, SEXP h, SEXP i, SEXP j, SEXP k, SEXP l) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->*F(Value<A1>::coerceToC(a),
+            return Value<RET>::coerceToR((this_->*F)(Value<A1>::coerceToC(a),
                                                    Value<A2>::coerceToC(b),
                                                    Value<A3>::coerceToC(c),
                                                    Value<A4>::coerceToC(d),

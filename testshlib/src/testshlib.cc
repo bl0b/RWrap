@@ -149,15 +149,16 @@ class pouet {
             std::cout << "Called toto " << hop << std::endl;
         }
         void plop(int, double, const char*, bool, std::string&) {}
+        pouet* reset(int i) { hop = i; return this; }
 };
 
-pouet* new_pouet() {
-    return new pouet();
-}
+/*pouet* new_pouet() {*/
+    /*return new pouet();*/
+/*}*/
 
-void delete_pouet(pouet* p) {
-    delete p;
-}
+/*void delete_pouet(pouet* p) {*/
+    /*delete p;*/
+/*}*/
 
 
 
@@ -167,11 +168,13 @@ CLASS(pouet)
     .ctor()
     .ctor<int>("some.int")
     .method(pouet, toto).auto_glue()
+    .method(pouet, plop).arg("a").arg("b").arg("c").arg("d").arg("e").auto_glue()
+    .method(pouet, reset).arg("i").auto_glue()
     ;
 
-void modify_pouet(pouet* p) {
-    p->hop = 23;
-}
+/*void modify_pouet(pouet* p) {*/
+    /*p->hop = 23;*/
+/*}*/
 
 #if 0
 struct pouet_name { static const char* name; };
@@ -202,9 +205,9 @@ namespace Rwrap {
 #endif
 
 MODULE(testshlib)
-    .reg(new_pouet).auto_glue()
-    .reg(delete_pouet).arg("p").auto_glue()
-    .reg(modify_pouet).arg("p").auto_glue()
+    /*.reg(new_pouet).auto_glue()*/
+    /*.reg(delete_pouet).arg("p").auto_glue()*/
+    /*.reg(modify_pouet).arg("p").auto_glue()*/
     /*.reg_meth(pouet, toto).auto_glue()*/
     /*._reg("pouet.toto", 1, (DL_FUNC) Rwrap::gen_meth<pouet, Rwrap::FuncTraits<BOOST_TYPEOF(&pouet::toto)> >::_w<&pouet::toto>::_).arg("this.ptr").auto_glue()*/
     /*.reg_meth(pouet, toto).auto_glue()*/

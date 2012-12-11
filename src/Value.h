@@ -68,11 +68,11 @@ struct Value<void*> {
     typedef void* CType;
     static CType coerceToC(SEXP v) {
         void* ret = R_ExternalPtrAddr(v);
-        std::cerr << "R->C ret=" << ret << std::endl;
+        /*std::cerr << "R->C ret=" << ret << std::endl;*/
         return ret;
     }
     static SEXP coerceToR(CType v) {
-        std::cerr << "C->R ptr=" << v << std::endl;
+        /*std::cerr << "C->R ptr=" << v << std::endl;*/
         return R_MakeExternalPtr(v, R_NilValue, R_NilValue);
     }
 };
@@ -155,6 +155,18 @@ struct Value<char*> {
     }
 };
 
+
+template <>
+struct Value<std::string&> {
+    typedef std::string& CType;
+    static CType coerceToC(SEXP v) {
+        std::string ret(CHAR(STRING_ELT(v, 0)));
+        return ret;
+    }
+    static SEXP coerceToR(CType v) {
+        return mkString(v.c_str());
+    }
+};
 
 template <>
 struct Value<std::string> {

@@ -273,7 +273,7 @@ public:
              << "', fields=c('this.ptr'), methods=list(" << std::endl
              << "initialize=function(...) { "
                 << "args <- list(...); l <- length(args); n <- names(args); "
-                << "print(args); "
+                /*<< "print(args); "*/
                 << "if (l == 1 && '.ptr' %in% n) { this.ptr <<- args$.ptr }";
         std::vector<unsigned int>::const_iterator ctori, ctorj = ctors.end();
         for(ctori = ctors.begin(); ctori != ctorj; ++ctori) {
@@ -286,7 +286,7 @@ public:
                 glue << " && '" << ai->name << "' %in% n";
                 std::cout << " && '" << ai->name << "' %in% n";
             }
-            glue << ") { cat('" << routine.name << "\\n'); this.ptr <<- .Call(" << routine.name;
+            glue << ") { this.ptr <<- .Call(" << routine.name;
             std::cout << ") { this.ptr <<- .Call(" << routine.name;
             for(ai = ws.args.begin(); ai != aj; ++ai) {
                 glue << ", args$" << ai->name;
