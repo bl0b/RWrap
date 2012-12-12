@@ -15,6 +15,7 @@ RWrap allows you to quickly publish C++ routines for use in R without any refact
       1. [Base types](#base-types)
       2. [Lists](#lists)
       3. [Data frames](#data-frames)
+      4. [Classes](#classes)
   4. [Extending RWrap](#extending-rwrap)
 
 
@@ -196,6 +197,59 @@ a vector of strings.
         std::vector<const char*> strings = df[string_col_index];
         ...
     }
+
+#### Classes ####
+
+R features [Reference classes](http://www.inside-r.org/r-doc/methods/ReferenceClasses) since version 2.12
+(see help(ReferenceClasses) from the R prompt). It's a quite neat and convenient way of doing OOP as far as
+R goes. RWrap uses Reference classes to declare the wrappers to C++ classes.
+
+This is a beta feature! It doesn't handle automagically inheritance yet.
+Features supported:
+
+- default and non-default (overloaded) constructors,
+- NON-overloaded methods.
+- automatic destructor implemented in the $delete() method.
+
+The API here again tries to be as minimalistic as possible:
+
+    class Foo {
+    private:
+        int wibble;
+    public:
+        Foo() : wibble(0) {}
+        Foo(int x) : wibble(x) {}
+        Foo(int x, bool neg) : wibble((1 - 2*neg) * x) {}
+
+        void bar() { std::cout << x << std::endl; }
+    };
+
+    Foo* some_routine(int x) {
+        return new Foo(0xdeadbeef * x);
+    }
+
+    CLASS(Foo)
+        .ctor()
+        .ctor<int>("x")
+        .ctor<int, bool>("x", "x.is.neg")
+        .method(Foo, bar).auto_glue()
+        ;
+
+    MODULE(my_example_module)
+        .add_class(Foo)
+        .reg(some_routine).arg("x").auto_glue()
+        ;
+
+The CLASS macro automatically defines a class wrapper object and the code to automatically wrap and unwrap
+a pointer to instance.
+From R this class can be used in the following way:
+
+    > library(my_example_module)
+    > foo <- Foo$new()  # calls the default constructor
+    > foo$delete()  # destroys the instance
+    > foo <- Foo$new(x=42, neg=F)
+    > foo$bar()
+    > foo$delete()
 
 
 ### Extending RWrap ###
