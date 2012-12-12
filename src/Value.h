@@ -109,6 +109,39 @@ struct ClassWrap {
 };
 
 template <>
+struct Value<unsigned long> {
+    typedef unsigned long CType;
+    static CType coerceToC(SEXP v) {
+        return asInteger(v);
+    }
+    static SEXP coerceToR(CType v) {
+        return ScalarInteger(v);
+    }
+};
+
+template <>
+struct Value<unsigned int> {
+    typedef unsigned int CType;
+    static CType coerceToC(SEXP v) {
+        return asInteger(v);
+    }
+    static SEXP coerceToR(CType v) {
+        return ScalarInteger(v);
+    }
+};
+
+template <>
+struct Value<long> {
+    typedef long CType;
+    static CType coerceToC(SEXP v) {
+        return asInteger(v);
+    }
+    static SEXP coerceToR(CType v) {
+        return ScalarInteger(v);
+    }
+};
+
+template <>
 struct Value<int> {
     typedef int CType;
     static CType coerceToC(SEXP v) {
