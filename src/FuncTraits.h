@@ -468,7 +468,8 @@ struct FuncTraits<RET (C::*) ()> {
 
 }
 
-#define _FT(_func) typename Rwrap::add_ptr<__typeof__ _func>::type
+/*#define _FT(_func) typename Rwrap::add_ptr<__typeof__ _func>::type*/
+#define _FT(_func) __typeof__ _func*
 #define _MT(_func) __typeof__ _func
 
 #endif
