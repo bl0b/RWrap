@@ -217,9 +217,9 @@ struct RWrap_base {
     }
 
     Der& _reg(const char* rname, const char* cname, int argc, DL_FUNC wrapper) {
-        printf("Registering new routine :\n");
-        printf("   - name: %s\n", cname);
-        printf("   - argc: %i\n", argc);
+        /*printf("Registering new routine :\n");*/
+        /*printf("   - name: %s\n", cname);*/
+        /*printf("   - argc: %i\n", argc);*/
         /*printf("   - wrap: %p\n", wrapper);*/
         R_CallMethodDef def = {cname, wrapper, argc};
         routines_.push_back(def);
@@ -571,7 +571,7 @@ public:
         routines_.insert(routines_.end(), c.routines_.begin(), c.routines_.end());
         settings.insert(settings.end(), c.settings.begin(), c.settings.end());
         routine_names.insert(routine_names.end(), c.routine_names.begin(), c.routine_names.end());
-        std::cout << "Adding class " << c.name << std::endl;
+        /*std::cout << "Adding class " << c.name << std::endl;*/
         classes.push_back(&c);
         return *this;
     }
