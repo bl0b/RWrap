@@ -121,6 +121,13 @@ Rwrap::DataFrame testdf() {
     ret.add("hop", a);
     ret.add("zoup", b);
     ret.add("flourp", c);
+
+    std::vector<const char*> n;
+    n.push_back("toto1");
+    n.push_back("toto2");
+    n.push_back("toto3");
+    ret.rownames(n);
+
     return ret;
 }
 

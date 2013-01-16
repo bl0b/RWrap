@@ -172,7 +172,11 @@ struct Value<const char*> {
         return CHAR(STRING_ELT(v, 0));
     }
     static SEXP coerceToR(CType v) {
-        return mkString(v);
+        if (v) {
+            return mkString(v);
+        } else {
+            return R_NilValue;
+        }
     }
 };
 
@@ -184,7 +188,11 @@ struct Value<char*> {
         return const_cast<CType>(CHAR(STRING_ELT(v, 0)));
     }
     static SEXP coerceToR(CType v) {
-        return mkString(v);
+        if (v) {
+            return mkString(v);
+        } else {
+            return R_NilValue;
+        }
     }
 };
 
@@ -234,15 +242,15 @@ struct RVecTraits {
     }
 };
 
-template <typename T>
+template <typename RT, typename CT=RT>
 struct PODVecTraits {
-    typedef T* RContainerType;
-    typedef std::vector<T> CVecType;
+    typedef RT* RContainerType;
+    typedef std::vector<CT> CVecType;
     static void Rset(RContainerType rc, CVecType& cc, int i) {
-        rc[i] = cc[i];
+        rc[i] = (RT) cc[i];
     }
     static void Cset(CVecType& cc, RContainerType rc, int i) {
-        cc.push_back(rc[i]);
+        cc.push_back((CT) rc[i]);
     }
 };
 
@@ -255,6 +263,43 @@ template <> struct RVecTraits<double> : public PODVecTraits<double> {
     }
     using PODVecTraits<double>::Rset;
     using PODVecTraits<double>::Cset;
+};
+
+template <> struct RVecTraits<unsigned long>
+    : public PODVecTraits<int, unsigned long>
+{
+    enum { type=INTSXP };
+    typedef unsigned long value_type;
+    typedef int* RContainerType;
+    static RContainerType initRC(SEXP value) {
+        return INTEGER(value);
+    }
+    using PODVecTraits<int, unsigned long>::Rset;
+    using PODVecTraits<int, unsigned long>::Cset;
+};
+
+template <> struct RVecTraits<long> : public PODVecTraits<int, long> {
+    enum { type=INTSXP };
+    typedef long value_type;
+    typedef int* RContainerType;
+    static RContainerType initRC(SEXP value) {
+        return INTEGER(value);
+    }
+    using PODVecTraits<int, long>::Rset;
+    using PODVecTraits<int, long>::Cset;
+};
+
+template <> struct RVecTraits<unsigned int>
+    : public PODVecTraits<int, unsigned int>
+{
+    enum { type=INTSXP };
+    typedef unsigned int value_type;
+    typedef int* RContainerType;
+    static RContainerType initRC(SEXP value) {
+        return INTEGER(value);
+    }
+    using PODVecTraits<int, unsigned int>::Rset;
+    using PODVecTraits<int, unsigned int>::Cset;
 };
 
 template <> struct RVecTraits<int> : public PODVecTraits<int> {
@@ -442,16 +487,28 @@ class List {
 };
 
 class DataFrame : public List {
+    private:
+        SEXP rownames_;
+        int protect_count;
     public:
-        DataFrame() : List() {}
-        DataFrame(SEXP e) : List(e) {}
+        DataFrame() : List(), rownames_(0), protect_count(0) {}
+        DataFrame(SEXP e) : List(e), rownames_(0), protect_count(0) {}
+        template <typename StringType>
+        void rownames(std::vector<StringType>& names) {
+            PROTECT(rownames_ = Value<std::vector<StringType> >::coerceToR(names));
+            ++protect_count;
+        }
         virtual SEXP toR() const {
             SEXP expr;
-            PROTECT(expr = allocList(2));
+            PROTECT(expr = allocList(2 + (rownames_ != 0)));
             SET_TYPEOF(expr, LANGSXP);
             SETCAR(expr, install("as.data.frame"));
             SETCADR(expr, List::toR());
-            UNPROTECT(1);
+            if (rownames_ != 0) {
+                SETCADDR(expr, rownames_);
+                SET_TAG(CDDR(expr), install("row.names"));
+            }
+            UNPROTECT(1 + protect_count);
             return eval(expr, R_GlobalEnv);
         }
 };
