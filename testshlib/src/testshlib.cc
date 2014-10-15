@@ -100,6 +100,11 @@ void testvoid(const char* x) {
 }
 
 
+void testexc()
+{
+    throw Rwrap::Error("prout");
+}
+
 Rwrap::DataFrame testdf() {
     std::vector<int> a;
     std::vector<const char*> b;
@@ -241,6 +246,7 @@ MODULE(testshlib)
     .reg(mylist).arg("l").auto_glue()
     .reg(mul10).implicit_arg("10").arg("y").auto_glue()
     .reg(cvec).auto_glue()
+    .reg(testexc).auto_glue()
 
     .add_class(pouet)
     ;

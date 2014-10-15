@@ -53,8 +53,7 @@ struct _gen_<void> {
     template<void (*F)()>
     struct _w {
         static SEXP _() {
-            F();
-            return R_NilValue;
+            SANDBOXED_NORET(F());
         }
     };
     template <class C>
@@ -63,8 +62,7 @@ struct _gen_<void> {
         struct _w {
             static SEXP _(SEXP _ptr) {
                 C* this_ = Value<C*>::coerceToC(_ptr);
-                (this_->*F)();
-                return R_NilValue;
+                SANDBOXED_NORET((this_->*F)());
             }
         };
     };
@@ -75,14 +73,14 @@ struct _gen_<RET> {
     template<RET (*F)()>
     struct _w {
         static SEXP _() {
-            return Value<RET>::coerceToR(F());
+            SANDBOXED_RET(Value<RET>::coerceToR(F()));
         }
     };
     template <class C, RET (C::*F)()>
     struct _mw {
         static SEXP _(SEXP _ptr) {
             C* this_ = Value<C*>::coerceToC(_ptr);
-            return Value<RET>::coerceToR(this_->F());
+            SANDBOXED_RET(Value<RET>::coerceToR(this_->F()));
         }
     };
 };
@@ -94,8 +92,7 @@ struct _gen_<void, A1> {
     template<void (*F)(A1)>
     struct _w {
         static SEXP _(SEXP a) {
-            F(Value<A1>::coerceToC(a));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a)));
         }
     };
 };
@@ -105,7 +102,7 @@ struct _gen_<RET, A1> {
     template<RET (*F)(A1)>
     struct _w {
         static SEXP _(SEXP a) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a))));
         }
     };
 };
@@ -117,8 +114,7 @@ struct _gen_<void, A1, A2> {
     template<void (*F)(A1, A2)>
     struct _w {
         static SEXP _(SEXP a, SEXP b) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b)));
         }
     };
 };
@@ -128,8 +124,8 @@ struct _gen_<RET, A1, A2> {
     template<RET (*F)(A1, A2)>
     struct _w {
         static SEXP _(SEXP a, SEXP b) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b))));
         }
     };
 };
@@ -141,9 +137,9 @@ struct _gen_<RET, A1, A2, A3> {
     template<RET (*F)(A1, A2, A3)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c))));
         }
     };
 };
@@ -153,9 +149,8 @@ struct _gen_<void, A1, A2, A3> {
     template<void (*F)(A1, A2, A3)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c)));
         }
     };
 };
@@ -167,10 +162,10 @@ struct _gen_<RET, A1, A2, A3, A4> {
     template<RET (*F)(A1, A2, A3, A4)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d))));
         }
     };
 };
@@ -180,9 +175,8 @@ struct _gen_<void, A1, A2, A3, A4> {
     template<void (*F)(A1, A2, A3, A4)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d)));
         }
     };
 };
@@ -194,10 +188,9 @@ struct _gen_<void, A1, A2, A3, A4, A5> {
     template<void (*F)(A1, A2, A3, A4, A5)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e)));
         }
     };
 };
@@ -208,11 +201,11 @@ struct _gen_<RET, A1, A2, A3, A4, A5> {
     template<RET (*F)(A1, A2, A3, A4, A5)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e))));
         }
     };
 };
@@ -225,12 +218,12 @@ struct _gen_<RET, A1, A2, A3, A4, A5, A6> {
     template<RET (*F)(A1, A2, A3, A4, A5, A6)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e),
-                                           Value<A6>::coerceToC(f)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e),
+                                                  Value<A6>::coerceToC(f))));
         }
     };
 };
@@ -241,10 +234,9 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6> {
     template<void (*F)(A1, A2, A3, A4, A5, A6)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f)));
         }
     };
 };
@@ -257,11 +249,10 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6, A7> {
     template<void (*F)(A1, A2, A3, A4, A5, A6, A7)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
-              Value<A7>::coerceToC(g));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
+                              Value<A7>::coerceToC(g)));
         }
     };
 };
@@ -272,13 +263,13 @@ struct _gen_<RET, A1, A2, A3, A4, A5, A6, A7> {
     template<RET (*F)(A1, A2, A3, A4, A5, A6, A7)>
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e),
-                                           Value<A6>::coerceToC(f),
-                                           Value<A7>::coerceToC(g)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e),
+                                                  Value<A6>::coerceToC(f),
+                                                  Value<A7>::coerceToC(g))));
         }
     };
 };
@@ -292,11 +283,10 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6, A7, A8> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
-              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
+                              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h)));
         }
     };
 };
@@ -308,14 +298,14 @@ struct _gen_<RET, A1, A2, A3, A4, A5, A6, A7, A8> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e),
-                                           Value<A6>::coerceToC(f),
-                                           Value<A7>::coerceToC(g),
-                                           Value<A8>::coerceToC(h)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e),
+                                                  Value<A6>::coerceToC(f),
+                                                  Value<A7>::coerceToC(g),
+                                                  Value<A8>::coerceToC(h))));
         }
     };
 };
@@ -329,12 +319,11 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6, A7, A8, A9> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
-              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
-              Value<A9>::coerceToC(i));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
+                              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
+                              Value<A9>::coerceToC(i)));
         }
     };
 };
@@ -346,15 +335,15 @@ struct _gen_<RET, A1, A2, A3, A4, A5, A6, A7, A8, A9> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e),
-                                           Value<A6>::coerceToC(f),
-                                           Value<A7>::coerceToC(g),
-                                           Value<A8>::coerceToC(h),
-                                           Value<A9>::coerceToC(i)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e),
+                                                  Value<A6>::coerceToC(f),
+                                                  Value<A7>::coerceToC(g),
+                                                  Value<A8>::coerceToC(h),
+                                                  Value<A9>::coerceToC(i))));
         }
     };
 };
@@ -368,12 +357,11 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i, SEXP j) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
-              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
-              Value<A9>::coerceToC(i), Value<A10>::coerceToC(j));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
+                              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
+                              Value<A9>::coerceToC(i), Value<A10>::coerceToC(j)));
         }
     };
 };
@@ -386,16 +374,16 @@ struct _gen_<RET, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i, SEXP j) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e),
-                                           Value<A6>::coerceToC(f),
-                                           Value<A7>::coerceToC(g),
-                                           Value<A8>::coerceToC(h),
-                                           Value<A9>::coerceToC(i),
-                                           Value<A10>::coerceToC(j)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e),
+                                                  Value<A6>::coerceToC(f),
+                                                  Value<A7>::coerceToC(g),
+                                                  Value<A8>::coerceToC(h),
+                                                  Value<A9>::coerceToC(i),
+                                                  Value<A10>::coerceToC(j))));
         }
     };
 };
@@ -410,13 +398,12 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i, SEXP j, SEXP k) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
-              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
-              Value<A9>::coerceToC(i), Value<A10>::coerceToC(j),
-              Value<A11>::coerceToC(k));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
+                              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
+                              Value<A9>::coerceToC(i), Value<A10>::coerceToC(j),
+                              Value<A11>::coerceToC(k)));
         }
     };
 };
@@ -429,17 +416,17 @@ struct _gen_<RET, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i, SEXP j, SEXP k) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e),
-                                           Value<A6>::coerceToC(f),
-                                           Value<A7>::coerceToC(g),
-                                           Value<A8>::coerceToC(h),
-                                           Value<A9>::coerceToC(i),
-                                           Value<A10>::coerceToC(j),
-                                           Value<A11>::coerceToC(k)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e),
+                                                  Value<A6>::coerceToC(f),
+                                                  Value<A7>::coerceToC(g),
+                                                  Value<A8>::coerceToC(h),
+                                                  Value<A9>::coerceToC(i),
+                                                  Value<A10>::coerceToC(j),
+                                                  Value<A11>::coerceToC(k))));
         }
     };
 };
@@ -454,13 +441,12 @@ struct _gen_<void, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i, SEXP j, SEXP k, SEXP l) {
-            F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
-              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
-              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
-              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
-              Value<A9>::coerceToC(i), Value<A10>::coerceToC(j),
-              Value<A11>::coerceToC(k), Value<A12>::coerceToC(l));
-            return R_NilValue;
+            SANDBOXED_NORET(F(Value<A1>::coerceToC(a), Value<A2>::coerceToC(b),
+                              Value<A3>::coerceToC(c), Value<A4>::coerceToC(d),
+                              Value<A5>::coerceToC(e), Value<A6>::coerceToC(f),
+                              Value<A7>::coerceToC(g), Value<A8>::coerceToC(h),
+                              Value<A9>::coerceToC(i), Value<A10>::coerceToC(j),
+                              Value<A11>::coerceToC(k), Value<A12>::coerceToC(l)));
         }
     };
 };
@@ -473,18 +459,18 @@ struct _gen_<RET, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12> {
     struct _w {
         static SEXP _(SEXP a, SEXP b, SEXP c, SEXP d, SEXP e, SEXP f, SEXP g,
                       SEXP h, SEXP i, SEXP j, SEXP k, SEXP l) {
-            return Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
-                                           Value<A2>::coerceToC(b),
-                                           Value<A3>::coerceToC(c),
-                                           Value<A4>::coerceToC(d),
-                                           Value<A5>::coerceToC(e),
-                                           Value<A6>::coerceToC(f),
-                                           Value<A7>::coerceToC(g),
-                                           Value<A8>::coerceToC(h),
-                                           Value<A9>::coerceToC(i),
-                                           Value<A10>::coerceToC(j),
-                                           Value<A11>::coerceToC(k),
-                                           Value<A12>::coerceToC(l)));
+            SANDBOXED_RET(Value<RET>::coerceToR(F(Value<A1>::coerceToC(a),
+                                                  Value<A2>::coerceToC(b),
+                                                  Value<A3>::coerceToC(c),
+                                                  Value<A4>::coerceToC(d),
+                                                  Value<A5>::coerceToC(e),
+                                                  Value<A6>::coerceToC(f),
+                                                  Value<A7>::coerceToC(g),
+                                                  Value<A8>::coerceToC(h),
+                                                  Value<A9>::coerceToC(i),
+                                                  Value<A10>::coerceToC(j),
+                                                  Value<A11>::coerceToC(k),
+                                                  Value<A12>::coerceToC(l))));
         }
     };
 };

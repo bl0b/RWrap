@@ -42,6 +42,30 @@
 
 #include "Value.h"
 #include "FuncTraits.h"
+
+namespace Rwrap {
+    struct NullPtrError : public std::exception {
+        const char* what() const throw() { return "Attempting to invoke a method on a NULL instance"; }
+    };
+}
+
+#define HANDLE_EXCEPTION(_e) do { \
+        SEXP stop; \
+        PROTECT(stop = allocList(2)); \
+        SET_TYPEOF(stop, LANGSXP); \
+        SETCAR(stop, install("stop")); \
+        SETCADR(stop, Value<const char*>::coerceToR(_e.what())); \
+        return eval(stop, R_GlobalEnv); \
+    } while (0)
+
+#define NO_RET
+#define SANDBOXED(_expr_, RET_TYPE) \
+    try { RET_TYPE _expr_; } catch (Error e) { HANDLE_EXCEPTION(e); } catch (NullPtrError e) { HANDLE_EXCEPTION(e); }
+
+
+#define SANDBOXED_NORET(_expr_) do { SANDBOXED(_expr_, NO_RET); return R_NilValue; } while (0)
+#define SANDBOXED_RET(_expr_) SANDBOXED(_expr_, return)
+
 #include "gen_wrap.h"
 #include "gen_method_wrap.h"
 #include "static_ctor.h"
@@ -206,8 +230,8 @@ struct RWrap_base {
     }
 
     Der& wrap_result(const char* pfx, const char* sfx) {
-        settings.back().wrap_result_prefix = pfx;
-        settings.back().wrap_result_suffix = sfx;
+        settings.back().wrap_result_prefix += pfx;
+        settings.back().wrap_result_suffix = sfx + settings.back().wrap_result_suffix;
         return *dynamic_cast<Der*>(this);
     }
 
@@ -308,8 +332,13 @@ struct dtor {
         dn = name;
         dn += ".dtor_";
     }
-    static void _(C* ptr) { delete ptr; }
+    static void _(C* ptr) { if (ptr) { delete ptr; } else { throw NullPtrError(); } }
 };
+
+
+#define SAFE_METHOD_INVOCATION_PFX "{ if (is.null(this.ptr)) stop('This instance has already been destroyed'); "
+#define SAFE_METHOD_INVOCATION_SFX " }"
+#define SAFE_METHOD_INVOCATION_WRAP SAFE_METHOD_INVOCATION_PFX, SAFE_METHOD_INVOCATION_SFX
 
 template <class C>
 class BoundClass : public Class {
@@ -335,7 +364,7 @@ public:
         typedef gen<FuncTraits<_FT(DTOR::_)> > G;
         _reg("delete", d.dn.c_str(), 1, (DL_FUNC) G::template _w<DTOR::_>::_);
         implicit_arg("this.ptr");
-        wrap_result("{ ", "; this.ptr <<- NULL }");
+        wrap_result(SAFE_METHOD_INVOCATION_PFX, "; this.ptr <<- NULL" SAFE_METHOD_INVOCATION_SFX);
     }
     BoundClass(const Class& c)
         : Class(c)
@@ -370,7 +399,7 @@ public:
             typedef typename remove_ptr<SIG>::type FSIG;
             typedef gen_meth<C, FuncTraits<FSIG> > M;
             this_._reg(rname, cname, M::FT::ArgCount + 1,
-                       (DL_FUNC) (M::template _w<F>::_)).implicit_arg("this.ptr");
+                       (DL_FUNC) (M::template _w<F>::_)).implicit_arg("this.ptr").wrap_result(SAFE_METHOD_INVOCATION_WRAP);
             return this_;
         }
     };

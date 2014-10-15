@@ -28,6 +28,7 @@
 #include <string>
 #include <cstring>
 #include <typeinfo>
+#include <exception>
 
 #include <R.h>
 #include <Rinternals.h>
@@ -41,6 +42,11 @@ namespace Rwrap {
 /*character STRSXP */
 /*list  	VECSXP*/
 
+struct Error : public std::exception {
+    const char* _what;
+    const char* what() const throw() { return _what; }
+    Error(const char* _) : _what(_) {}
+};
 
 template <typename T> struct Value {};
 template <> struct Value<void> {};
@@ -95,9 +101,16 @@ struct ClassWrap {
         if (isObject(v)) {
             SEXP slot = lang3(install("slot"), v, mkString(".xData"));
             SEXP get = lang3(install("get"), mkString("this.ptr"), slot);
-            return (CType) Value<void*>::coerceToC(eval(get, R_GlobalEnv));
+            CType ptr = (CType) Value<void*>::coerceToC(eval(get, R_GlobalEnv));
+            if (!ptr) {
+                throw Error("NULL pointer");
+            }
         } else {
-            return (CType) Value<void*>::coerceToC(v);
+            CType ptr = (CType) Value<void*>::coerceToC(v);
+            if (!ptr) {
+                throw Error("NULL pointer");
+            }
+            return ptr;
         }
     }
     static SEXP coerceToR(CType v) {
@@ -108,11 +121,28 @@ struct ClassWrap {
     }
 };
 
+
+template <typename INT_TYPE>
+INT_TYPE safe_num(SEXP v)
+{
+    if (!isNumeric(v)) {
+        throw Error("Expected a numeric value");
+    }
+    if (isReal(v)) {
+        return (INT_TYPE) asReal(v);
+    } else if (isInteger(v)) {
+        return (INT_TYPE) asInteger(v);
+    } else if (isLogical(v)) {
+        return (INT_TYPE) asLogical(v);
+    }
+}
+
+
 template <>
 struct Value<unsigned long> {
     typedef unsigned long CType;
     static CType coerceToC(SEXP v) {
-        return asInteger(v);
+        return safe_num<CType>(v);
     }
     static SEXP coerceToR(CType v) {
         return ScalarInteger(v);
@@ -123,7 +153,7 @@ template <>
 struct Value<unsigned int> {
     typedef unsigned int CType;
     static CType coerceToC(SEXP v) {
-        return asInteger(v);
+        return safe_num<CType>(v);
     }
     static SEXP coerceToR(CType v) {
         return ScalarInteger(v);
@@ -134,7 +164,7 @@ template <>
 struct Value<long> {
     typedef long CType;
     static CType coerceToC(SEXP v) {
-        return asInteger(v);
+        return safe_num<CType>(v);
     }
     static SEXP coerceToR(CType v) {
         return ScalarInteger(v);
@@ -145,7 +175,7 @@ template <>
 struct Value<int> {
     typedef int CType;
     static CType coerceToC(SEXP v) {
-        return asInteger(v);
+        return safe_num<CType>(v);
     }
     static SEXP coerceToR(CType v) {
         return ScalarInteger(v);
@@ -157,7 +187,7 @@ template <>
 struct Value<double> {
     typedef double CType;
     static CType coerceToC(SEXP v) {
-        return asReal(v);
+        return safe_num<double>(v);
     }
     static SEXP coerceToR(CType v) {
         return ScalarReal(v);
@@ -225,6 +255,19 @@ template <typename T>
 SEXP coerceToR(T v) { return Value<T>::coerceToR(v); }
 
 
+inline
+SEXP force_int(SEXP v)
+{
+    SEXP expr;
+    PROTECT(expr = allocList(2));
+    SET_TYPEOF(expr, LANGSXP);
+    SETCAR(expr, install("as.integer"));
+    SETCADR(expr, v);
+    UNPROTECT(1);
+    return eval(expr, R_GlobalEnv);
+}
+
+
 
 template <typename T>
 struct RVecTraits {
@@ -272,7 +315,7 @@ template <> struct RVecTraits<unsigned long>
     typedef unsigned long value_type;
     typedef int* RContainerType;
     static RContainerType initRC(SEXP value) {
-        return INTEGER(value);
+        return INTEGER(force_int(value));
     }
     using PODVecTraits<int, unsigned long>::Rset;
     using PODVecTraits<int, unsigned long>::Cset;
@@ -283,7 +326,7 @@ template <> struct RVecTraits<long> : public PODVecTraits<int, long> {
     typedef long value_type;
     typedef int* RContainerType;
     static RContainerType initRC(SEXP value) {
-        return INTEGER(value);
+        return INTEGER(force_int(value));
     }
     using PODVecTraits<int, long>::Rset;
     using PODVecTraits<int, long>::Cset;
@@ -296,7 +339,7 @@ template <> struct RVecTraits<unsigned int>
     typedef unsigned int value_type;
     typedef int* RContainerType;
     static RContainerType initRC(SEXP value) {
-        return INTEGER(value);
+        return INTEGER(force_int(value));
     }
     using PODVecTraits<int, unsigned int>::Rset;
     using PODVecTraits<int, unsigned int>::Cset;
@@ -307,7 +350,7 @@ template <> struct RVecTraits<int> : public PODVecTraits<int> {
     typedef int value_type;
     typedef int* RContainerType;
     static RContainerType initRC(SEXP value) {
-        return INTEGER(value);
+        return INTEGER(force_int(value));
     }
     using PODVecTraits<int>::Rset;
     using PODVecTraits<int>::Cset;
@@ -333,6 +376,9 @@ template <> struct RVecTraits<float> {
     enum { type=SINGLESXP };
     /* should be avoided and coerced into double somewhere else */
 };
+
+
+
 
 template <> struct RVecTraits<std::string> {
     enum { type=STRSXP };
